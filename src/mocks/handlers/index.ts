@@ -3,6 +3,7 @@ import { auditRunsHandlers } from "./audit-runs.handlers";
 import { authHandlers } from "./auth.handlers";
 import { findingsHandlers } from "./findings.handlers";
 import { mastersHandlers } from "./masters.handlers";
+import { reportsHandlers } from "./reports.handlers";
 import { reviewHandlers } from "./review.handlers";
 import { usersHandlers } from "./users.handlers";
 
@@ -14,5 +15,6 @@ export const handlers = [
   ...reviewHandlers, // before audit-runs: more specific /audit-runs/:id/* routes
   ...auditRunsHandlers,
   ...findingsHandlers,
+  ...reportsHandlers,
   ...usersHandlers,
 ];

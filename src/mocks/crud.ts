@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpHandler, type JsonBodyType } from "msw";
 import { can, type Permission } from "@/lib/auth";
 import type { User } from "@/types/domain";
 import { authenticate } from "./auth";
+import { logEvent } from "./audit-log";
 import { persist } from "./db";
 import { apiUrl, errorResponse, networkDelay, nowIso, paginate } from "./utils";
 
@@ -90,6 +91,7 @@ export function crudHandlers<T extends { id: string; updatedAt: string; updatedB
       if (errors) return validationError(errors);
       const item = config.create(input, user);
       config.collection().push(item);
+      logEvent(user, "CREATED", config.path, item.id, `Created ${config.path.slice(1)} record`);
       persist();
       return HttpResponse.json(view(item), { status: 201 });
     }),
@@ -106,6 +108,7 @@ export function crudHandlers<T extends { id: string; updatedAt: string; updatedB
       config.update(item, input);
       item.updatedAt = nowIso();
       item.updatedBy = user.id;
+      logEvent(user, "UPDATED", config.path, item.id, `Updated ${config.path.slice(1)} record`);
       persist();
       return HttpResponse.json(view(item));
     }),
@@ -123,6 +126,13 @@ export function crudHandlers<T extends { id: string; updatedAt: string; updatedB
         item.isActive = isActive;
         item.updatedAt = nowIso();
         item.updatedBy = user.id;
+        logEvent(
+          user,
+          isActive ? "REACTIVATED" : "DEACTIVATED",
+          config.path,
+          item.id,
+          `${isActive ? "Reactivated" : "Deactivated"} ${config.path.slice(1)} record`,
+        );
         persist();
         return HttpResponse.json(view(item));
       }),

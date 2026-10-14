@@ -21,32 +21,32 @@ async function auditor() {
   return store;
 }
 
-const bellfastJuly: CreateRunRequest = {
+const bellfastDec: CreateRunRequest = {
   auditType: "VENDOR",
   vendorId: "ven-bellfast",
   peUnitId: "unit-hrh",
-  activityPeriodStart: "2026-07-01",
-  activityPeriodEnd: "2026-07-31",
-  executionWindowStart: "2026-08-01",
-  executionWindowEnd: "2026-08-30",
-  window1Start: "2026-08-01",
-  window1End: "2026-08-10",
+  activityPeriodStart: "2026-12-01",
+  activityPeriodEnd: "2026-12-31",
+  executionWindowStart: "2027-01-01",
+  executionWindowEnd: "2027-01-30",
+  window1Start: "2027-01-01",
+  window1End: "2027-01-10",
   periodicItems: [],
 };
 
 describe("audit run creation (§6, §13, §15.9)", () => {
   it("auto-creates LIFETIME/ONE_TIME items and only the PERIODIC periods the auditor chose", async () => {
     const store = await auditor();
-    const { items } = await store.dispatch(auditRunsApi.endpoints.previewRunChecklist.initiate(bellfastJuly)).unwrap();
+    const { items } = await store.dispatch(auditRunsApi.endpoints.previewRunChecklist.initiate(bellfastDec)).unwrap();
     const periodic = items.filter((i) => i.cadence === "PERIODIC");
     const automatic = items.length - periodic.length;
 
     const run = await store
       .dispatch(
         auditRunsApi.endpoints.createAuditRun.initiate({
-          ...bellfastJuly,
+          ...bellfastDec,
           periodicItems: [
-            { checklistItemId: periodic[0].id, periods: [{ periodStart: "2026-07-01", periodEnd: "2026-07-31" }] },
+            { checklistItemId: periodic[0].id, periods: [{ periodStart: "2026-12-01", periodEnd: "2026-12-31" }] },
           ],
         }),
       )
@@ -61,7 +61,7 @@ describe("audit run creation (§6, §13, §15.9)", () => {
 
   it("rejects an overlapping run for the same party and unit", async () => {
     const store = await auditor();
-    const error = await failure(store.dispatch(auditRunsApi.endpoints.createAuditRun.initiate(bellfastJuly)).unwrap());
+    const error = await failure(store.dispatch(auditRunsApi.endpoints.createAuditRun.initiate(bellfastDec)).unwrap());
     expect(error).toMatchObject({ status: 409, code: "RUN_OVERLAP" });
   });
 
@@ -84,7 +84,7 @@ describe("audit run creation (§6, §13, §15.9)", () => {
       store
         .dispatch(
           auditRunsApi.endpoints.previewRunChecklist.initiate({
-            ...bellfastJuly,
+            ...bellfastDec,
             ...scope,
             activityPeriodStart: "2026-09-01",
             activityPeriodEnd: "2026-09-30",
@@ -100,7 +100,7 @@ describe("audit run creation (§6, §13, §15.9)", () => {
     const error = await failure(
       store
         .dispatch(
-          auditRunsApi.endpoints.createAuditRun.initiate({ ...bellfastJuly, executionWindowStart: "2026-07-20" }),
+          auditRunsApi.endpoints.createAuditRun.initiate({ ...bellfastDec, executionWindowStart: "2026-07-20" }),
         )
         .unwrap(),
     );

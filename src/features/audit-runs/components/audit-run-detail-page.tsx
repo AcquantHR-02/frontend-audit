@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowLeftIcon, CheckIcon, ClipboardCheckIcon, InfoIcon, LockIcon, SearchIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  ClipboardCheckIcon,
+  FileSpreadsheetIcon,
+  InfoIcon,
+  LockIcon,
+  SearchIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DataTable, type DataTableColumn } from "@/components/shared/data-table";
@@ -14,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { exportRunReport } from "@/lib/export/excel";
 import { cadenceMeta, canPartyUpload, complianceMeta, formatScore, runPhaseMeta, submissionMeta } from "@/lib/domain";
 import { cn, formatDate, formatDateRange } from "@/lib/utils";
 import type { ApiError } from "@/types/api";
@@ -180,7 +189,16 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
         title={`${run.code} · ${run.partyName}`}
         badge={<StatusBadge meta={runPhaseMeta[run.phase]} />}
         description={`${run.auditType === "VENDOR" ? "Vendor audit" : "PE audit"} · ${run.unitCode} ${run.unitName} · ${run.peName} · activity ${formatDateRange(run.activityPeriodStart, run.activityPeriodEnd)}`}
-        actions={items && <PhaseActions run={run} airs={items} />}
+        actions={
+          items && (
+            <>
+              <Button variant="outline" onClick={() => exportRunReport(run, items)}>
+                <FileSpreadsheetIcon /> Export Excel
+              </Button>
+              <PhaseActions run={run} airs={items} />
+            </>
+          )
+        }
       />
 
       <PhaseTimeline run={run} />

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { can, Permission } from "@/lib/auth";
 import type { Finding, FindingDetail, FindingStatus, FindingView, StoredFile, User } from "@/types/domain";
+import { logEvent } from "../audit-log";
 import { requireUser } from "../crud";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso, paginate } from "../utils";
@@ -150,6 +151,7 @@ export const findingsHandlers = [
       uploadedAt: nowIso(),
     };
     db.findingAttachments.push(attachment);
+    logEvent(user, "REMEDIATION_UPLOADED", "Finding", finding.id, `${files.length} file(s) uploaded as remediation`);
     persist();
     return HttpResponse.json(attachment, { status: 201 });
   }),
@@ -165,6 +167,13 @@ export const findingsHandlers = [
     if (body.status && !["OPEN", "RESOLVED"].includes(body.status)) return errorResponse(400, "Invalid status.");
     if (body.status) finding.status = body.status;
     if (body.remarks !== undefined) finding.remarks = body.remarks?.trim() || null;
+    logEvent(
+      user,
+      body.status ? `FINDING_${body.status}` : "FINDING_UPDATED",
+      "Finding",
+      finding.id,
+      body.status ? `Finding marked ${body.status.toLowerCase()}` : "Finding notes updated",
+    );
     finding.updatedAt = nowIso();
     finding.updatedBy = user.id;
     persist();

@@ -13,6 +13,7 @@ import {
   validateEvidence,
 } from "@/lib/domain";
 import type { AuditRun, ComplianceStatus, EvidenceRecord, StoredFile, User } from "@/types/domain";
+import { logEvent } from "../audit-log";
 import { requireUser } from "../crud";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso, todayIso } from "../utils";
@@ -131,6 +132,13 @@ export const reviewHandlers = [
     db.evidence.push(record);
     air.evidenceCount += 1;
     if (asParty && air.submissionStatus === "PENDING") air.submissionStatus = "SUBMITTED";
+    logEvent(
+      user,
+      naProposed ? "NA_PROPOSED" : "EVIDENCE_UPLOADED",
+      "AuditItem",
+      air.id,
+      `${run.code}: ${files.length} file(s) on "${air.descriptionSnapshot.slice(0, 60)}"`,
+    );
     air.updatedAt = nowIso();
     air.updatedBy = user.id;
     persist();
@@ -172,6 +180,13 @@ export const reviewHandlers = [
       updatedAt: nowIso(),
       updatedBy: user.id,
     });
+    logEvent(
+      user,
+      "ITEM_STAMPED",
+      "AuditItem",
+      air.id,
+      `${run.code}: stamped ${body.complianceStatus} on "${air.descriptionSnapshot.slice(0, 60)}"`,
+    );
     persist();
     return HttpResponse.json(air);
   }),
@@ -186,6 +201,7 @@ export const reviewHandlers = [
     if (!["SCHEDULED", "WINDOW_1"].includes(phaseOf(run))) return errorResponse(409, "Review has already started.");
     run.reviewStart = todayIso();
     touch(run, user);
+    logEvent(user, "REVIEW_STARTED", "AuditRun", run.id, `${run.code}: Window 1 closed, review started`);
     persist();
     return HttpResponse.json(toRunView(run));
   }),
@@ -223,6 +239,15 @@ export const reviewHandlers = [
       run.window2End = window2End;
       run.executionWindowEnd = window2End > run.executionWindowEnd ? addDays(window2End, 5) : run.executionWindowEnd;
     }
+    logEvent(
+      user,
+      run.window2Start ? "WINDOW2_OPENED" : "REVIEW_ENDED",
+      "AuditRun",
+      run.id,
+      run.window2Start
+        ? `${run.code}: Window 2 ${run.window2Start} → ${run.window2End}`
+        : `${run.code}: moved to Final review`,
+    );
     touch(run, user);
     persist();
     return HttpResponse.json(toRunView(run));
@@ -238,6 +263,7 @@ export const reviewHandlers = [
     if (phaseOf(run) !== "WINDOW_2") return errorResponse(409, "Window 2 isn't open.");
     run.finalReviewStart = todayIso();
     touch(run, user);
+    logEvent(user, "WINDOW2_CLOSED", "AuditRun", run.id, `${run.code}: Window 2 closed`);
     persist();
     return HttpResponse.json(toRunView(run));
   }),
@@ -273,6 +299,13 @@ export const reviewHandlers = [
     run.publishedAt = now;
     run.publishedBy = user.id;
     touch(run, user);
+    logEvent(
+      user,
+      "RUN_PUBLISHED",
+      "AuditRun",
+      run.id,
+      `${run.code} published; ${check.findingsToOpen} finding(s) opened`,
+    );
     for (const air of airs.filter((a) => a.complianceStatus === "NOT_COMPLIED")) {
       if (db.findings.some((f) => f.airId === air.id)) continue; // UNIQUE per AIR (§15.7)
       db.findings.push({

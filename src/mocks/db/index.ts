@@ -4,12 +4,15 @@
  * Bump DB_VERSION whenever the seed shape changes to discard stale data.
  */
 import type { AuditItemResult, AuditRun, EvidenceRecord, Finding, FindingAttachment } from "@/types/domain";
+import type { AuditEvent } from "../audit-log";
+import { generateDemoRuns } from "./demo-runs";
 import * as seed from "./seed";
 
 const STORAGE_KEY = "ams.mock-db";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 function createSeedDb() {
+  const demo = generateDemoRuns(seed);
   return {
     version: DB_VERSION,
     states: structuredClone(seed.states),
@@ -22,11 +25,12 @@ function createSeedDb() {
     peChecklistItems: structuredClone(seed.peChecklistItems),
     vendorChecklistAssignments: structuredClone(seed.vendorChecklistAssignments),
     peChecklistAssignments: structuredClone(seed.peChecklistAssignments),
-    auditRuns: [] as AuditRun[],
-    airs: [] as AuditItemResult[],
+    auditRuns: demo.runs as AuditRun[],
+    airs: demo.airs as AuditItemResult[],
     evidence: [] as EvidenceRecord[],
-    findings: [] as Finding[],
+    findings: demo.findings as Finding[],
     findingAttachments: [] as FindingAttachment[],
+    auditTrail: [] as AuditEvent[],
     users: structuredClone(seed.users),
     /** Plain-text only because this is a mock; the real backend stores hashes. */
     passwords: Object.fromEntries(seed.users.map((u) => [u.id, seed.MOCK_PASSWORD])) as Record<string, string>,

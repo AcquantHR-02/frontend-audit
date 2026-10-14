@@ -15,6 +15,7 @@ import type {
   VendorSummary,
 } from "@/types/domain";
 import { crudHandlers, isTaken, requireUser, stampCreated } from "../crud";
+import { logEvent } from "../audit-log";
 import { db, persist } from "../db";
 import { apiUrl, boolParam, errorResponse, networkDelay, newId, nowIso, todayIso } from "../utils";
 
@@ -208,6 +209,13 @@ const unitClosureHandlers = [
         endedAssignments++;
       }
     }
+    logEvent(
+      user,
+      "UNIT_CLOSED",
+      "PEUnit",
+      unit.id,
+      `${unit.code} closed on ${closedOn}; ${endedAssignments} assignment(s) ended`,
+    );
     persist();
     return HttpResponse.json({ unit: toUnitView(unit), endedAssignments });
   }),
@@ -221,6 +229,7 @@ const unitClosureHandlers = [
     if (!unit) return errorResponse(404, "Unit not found.");
     unit.closedAt = null;
     unit.closedBy = null;
+    logEvent(user, "UNIT_REOPENED", "PEUnit", unit.id, `${unit.code} reopened`);
     unit.updatedAt = nowIso();
     unit.updatedBy = user.id;
     persist();

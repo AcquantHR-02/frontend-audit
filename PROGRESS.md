@@ -99,7 +99,7 @@ audit-frontend/
 | 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ✅ Done    |
 | 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ✅ Done    |
 | 7   | Findings: list, detail, remediation uploads, resolve                                                              | ✅ Done    |
-| 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ⏳ Pending |
+| 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ✅ Done    |
 | 9   | Responsive polish pass across the whole app (mobile / tablet / desktop) — user request                            | ⏳ Pending |
 
 ---
@@ -138,6 +138,8 @@ audit-frontend/
 - Workspace endpoints: `GET/POST /airs/{id}/evidence` (multipart `files[]`, `partyRemarks`, `naProposedByParty`), `PATCH /airs/{id}/review {complianceStatus, auditRemarks, validTo}`, `POST /audit-runs/{id}/start-review`, `/end-review {window2Start?, window2End?}` (409 `WINDOW2_REQUIRED`), `/close-window2`, `GET /audit-runs/{id}/publish-check`, `POST /audit-runs/{id}/publish` (opens findings). Phase is derived from dates plus `reviewStart` / `finalReviewStart` (early window closure).
 - File storage: mock keeps files only for the browser session; backend should return signed download URLs.
 - Findings endpoints: `GET /findings?status&auditType&runId`, `GET /findings/summary`, `GET /findings/{id}` (with attachments), `POST /findings/{id}/attachments` (multipart 1–3 files + remarks; party only while OPEN → 409 `FINDING_RESOLVED`), `PATCH /findings/{id} {status?, remarks?}` (auditors).
+- Reporting endpoints: `GET /dashboard` (role-scoped KPIs, runs by phase, published score, party scores, monthly trend, recent runs), `GET /reports/score-rollup?peId&from&to&auditType` (party → unit raw counts + grand total), `GET /audit-trail?action&search` (paginated events).
+- Retention rule interpretation to confirm: FY N becomes purge-eligible on the 1 April two years after it ends (FY 2024-25 → 1 Apr 2027).
 - List rows include derived counts (see `*Summary` / `*View` types in `src/types/domain/master.ts`).
 - Temporary passwords: mock returns them to the admin; production should email them instead.
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
@@ -267,4 +269,14 @@ npm run lint && npm run typecheck
 - Shared `FileDropzone` now used by both evidence and remediation uploads.
 - **Tests: 68 passing** (end-to-end workflow now covers the finding lifecycle).
 
-**Next: Step 8**: Dashboards (per role), reports (score roll-ups, trends), Excel exports, audit trail, retention notices.
+### 2026-10-14 — Step 8 ✅ Dashboards, reports, exports, audit trail, retention
+
+- **Demo data** (deterministic): published July 2026 runs for all vendor–unit pairs, May/June history for trends, runs in progress for the current cycle, findings for NC items (DB v7).
+- **Overview dashboard** (role-scoped): KPIs, runs by phase, compliance summary (score, C/NC/NA split, formula), score trend (Recharts line with tooltip), score by party, recent runs. Charts follow the dataviz rules (single hue for magnitude, status colours only for C/NC/NA with labels, one axis).
+- **Reports** (`/reports`): score roll-up by party with expandable units and grand total (raw counts summed, rounded once, §10); filters (PE, type, activity date range); **Excel export** (Score report + By unit sheets).
+- **Run detail → Export Excel**: detailed audit report per run (unit, period, Act, requirement, cadence, status, remarks, totals).
+- **Audit trail** (`/admin/audit-trail`, admin): every sign-in, run creation, upload, NA proposal, stamp, phase change, publish, remediation, finding status, unit closure, assignment, user and master-data change; filter + search.
+- **Retention** (`/admin/retention`): next purge date, cutoff FY, scheduled runs, 30/7-day notice banner (§12.14).
+- **Tests: 73 passing.**
+
+**Next: Step 9**: responsive polish across all screens.

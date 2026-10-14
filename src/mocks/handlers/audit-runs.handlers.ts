@@ -10,6 +10,7 @@ import type {
   TriggerOccasion,
   User,
 } from "@/types/domain";
+import { logEvent } from "../audit-log";
 import { requireUser, stampCreated } from "../crud";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso, paginate, todayIso } from "../utils";
@@ -311,6 +312,13 @@ export const auditRunsHandlers = [
     db.auditRuns.push(run);
     db.airs.push(...airs);
     db.evidence.push(...evidence);
+    logEvent(
+      user,
+      "RUN_CREATED",
+      "AuditRun",
+      run.id,
+      `Created ${run.code} with ${airs.length} items (${evidence.length} carried forward)`,
+    );
     persist();
     return HttpResponse.json(toRunView(run), { status: 201 });
   }),

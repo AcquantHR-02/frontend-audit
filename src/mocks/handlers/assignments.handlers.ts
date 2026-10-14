@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 import { Permission } from "@/lib/auth";
 import { assignmentStatus, periodsOverlap, planNewVersion } from "@/lib/domain/assignments";
 import type { VendorUnitAssignment, VendorUnitAssignmentView } from "@/types/domain";
+import { logEvent } from "../audit-log";
 import { requireUser, stampCreated } from "../crud";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso, paginate, todayIso } from "../utils";
@@ -89,6 +90,13 @@ export const assignmentsHandlers = [
       ...stampCreated(user),
     };
     db.vendorUnitAssignments.push(assignment);
+    logEvent(
+      user,
+      "VENDOR_ASSIGNED",
+      "VendorUnitAssignment",
+      assignment.id,
+      `${vendor.name} assigned to ${unit.code} from ${effectiveFrom}`,
+    );
     persist();
     return HttpResponse.json(toView(assignment), { status: 201 });
   }),
@@ -156,6 +164,13 @@ export const assignmentsHandlers = [
       ...stampCreated(user),
     };
     db.vendorChecklistAssignments.push(version);
+    logEvent(
+      user,
+      "CHECKLIST_VERSION",
+      "VendorChecklistAssignment",
+      version.id,
+      `New vendor checklist version from ${effectiveFrom} (${checklistItemIds.length} items)`,
+    );
     persist();
     return HttpResponse.json(version, { status: 201 });
   }),
@@ -202,6 +217,13 @@ export const assignmentsHandlers = [
       ...stampCreated(user),
     };
     db.peChecklistAssignments.push(version);
+    logEvent(
+      user,
+      "CHECKLIST_VERSION",
+      "PEChecklistAssignment",
+      version.id,
+      `New PE checklist version from ${effectiveFrom} (${peChecklistItemIds.length} items)`,
+    );
     persist();
     return HttpResponse.json(version, { status: 201 });
   }),

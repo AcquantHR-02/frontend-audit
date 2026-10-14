@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 import { Permission } from "@/lib/auth";
 import type { Role, User, UserView } from "@/types/domain";
 import { crudHandlers, isTaken, requireUser, stampCreated } from "../crud";
+import { logEvent } from "../audit-log";
 import { db, persist } from "../db";
 import { apiUrl, boolParam, errorResponse, networkDelay, newId, nowIso } from "../utils";
 
@@ -106,6 +107,7 @@ const userActions = [
     const password = temporaryPassword();
     db.users.push(user);
     db.passwords[user.id] = password;
+    logEvent(actor, "USER_CREATED", "User", user.id, `Created ${user.email} (${user.role})`);
     persist();
     return HttpResponse.json({ user: toUserView(user), temporaryPassword: password }, { status: 201 });
   }),
@@ -139,6 +141,7 @@ const userActions = [
     user.mustChangePassword = true;
     user.updatedAt = nowIso();
     user.updatedBy = actor.id;
+    logEvent(actor, "PASSWORD_RESET", "User", user.id, `Password reset for ${user.email}`);
     persist();
     // Real backend: emails the user instead of returning the password.
     return HttpResponse.json({ temporaryPassword: password, user: toUserView(user) });

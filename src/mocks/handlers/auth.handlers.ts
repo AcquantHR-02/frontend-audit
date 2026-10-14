@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { authenticate, issueAccessToken, toSessionUser } from "../auth";
+import { logEvent } from "../audit-log";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay } from "../utils";
 
@@ -46,6 +47,7 @@ export const authHandlers = [
 
     db.failedLogins[user.id] = 0;
     db.refreshSession = { userId: user.id };
+    logEvent(user, "SIGNED_IN", "User", user.id, `${user.email} signed in`);
     persist();
     return HttpResponse.json({ accessToken: issueAccessToken(user.id), user: toSessionUser(user) });
   }),
