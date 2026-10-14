@@ -1,5 +1,5 @@
 import type { AuditColumns, Id, IsoDate, IsoDateTime } from "./common";
-import type { AuditType, TriggerOccasion } from "./enums";
+import type { AuditType, RunPhase, TriggerOccasion } from "./enums";
 
 /** Raw AIR counts. Stored raw, rounded only at display (§10). */
 export interface ScoreCounts {
@@ -17,6 +17,8 @@ export interface ScoreCounts {
  */
 interface AuditRunBase extends AuditColumns {
   id: Id;
+  /** Human-readable reference, e.g. AR-2026-0007. */
+  code: string;
   peUnitId: Id;
 
   activityPeriodStart: IsoDate;
@@ -53,3 +55,12 @@ export interface PEAuditRun extends AuditRunBase {
 }
 
 export type AuditRun = VendorAuditRun | PEAuditRun;
+
+/** List/detail view with names resolved and derived phase (§4). */
+export type AuditRunView = AuditRun & {
+  partyName: string;
+  peName: string;
+  unitCode: string;
+  unitName: string;
+  phase: RunPhase;
+};

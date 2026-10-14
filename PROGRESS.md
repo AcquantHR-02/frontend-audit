@@ -96,10 +96,11 @@ audit-frontend/
 | 2   | Auth (login, JWT, change-password) + RBAC + app shell (sidebar, topbar, role-filtered nav)                        | ✅ Done    |
 | 3   | Master data: States, Acts, PEs + Units (close/reopen), Vendors, Checklist masters, Users                          | ✅ Done    |
 | 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ✅ Done    |
-| 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ⏳ Pending |
+| 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ✅ Done    |
 | 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ⏳ Pending |
 | 7   | Findings: list, detail, remediation uploads, resolve                                                              | ⏳ Pending |
 | 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ⏳ Pending |
+| 9   | Responsive polish pass across the whole app (mobile / tablet / desktop) — user request                            | ⏳ Pending |
 
 ---
 
@@ -133,6 +134,7 @@ audit-frontend/
 - Password policy and lockout threshold (frontend assumes 8+ chars with upper/lower/digit/special, lock after 5 failures).
 - Master-data endpoints the frontend expects (all paginated `?page&size&sort&search` + filters): `/states`, `/acts`, `/principal-employers`, `/pe-units?peId&status`, `/vendors`, `/checklist-items`, `/pe-checklist-items` (`?actId&stateId=<id|NATIONAL>&cadence&active`), `/users?role&active`. Soft delete via `PATCH /{resource}/{id}/status {isActive}`. Units: `POST /pe-units/{id}/close {closedOn}` → `{unit, endedAssignments}`, `POST /pe-units/{id}/reopen`. Users: `POST /users/{id}/reset-password`, `POST /users/{id}/unlock`.
 - Assignment endpoints: `GET/POST /vendor-unit-assignments` (`?vendorId&peUnitId&status=FUTURE|CURRENT|ENDED`), `POST /vendor-unit-assignments/{id}/end {effectiveTo}`; `GET/POST /vendor-checklist-assignments?vendorId&peUnitId` and `GET/POST /pe-checklist-assignments?peId` (versions newest first; POST creates a version and closes the previous one the day before). Checklist master supports `?forStates=<ids>` (state items + NATIONAL).
+- Audit run endpoints: `POST /audit-runs/checklist-preview` (scope → items + carry-forward flags, or §15.9/§13 error codes `ASSIGNMENT_NOT_FOUND`, `ASSIGNMENT_CHANGED_IN_PERIOD`, `UNIT_CLOSED`, `VENDOR_NOT_ASSIGNED`), `POST /audit-runs` (dates + `periodicItems[{checklistItemId, periods[]}]`; `RUN_OVERLAP` 409), `GET /audit-runs?auditType&phase`, `GET /audit-runs/{id}`, `GET /audit-runs/{id}/items`. Runs carry a human code `AR-YYYY-NNNN` (new field, please add).
 - List rows include derived counts (see `*Summary` / `*View` types in `src/types/domain/master.ts`).
 - Temporary passwords: mock returns them to the admin; production should email them instead.
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
@@ -232,4 +234,15 @@ npm run lint && npm run typecheck
 - Mock: seeded checklist assignments for every vendor-unit pair and Veero's PE checklist (DB v4).
 - **Tests: 50 passing.**
 
-**Next: Step 5**: Audit run creation wizard (vendor or PE audit, activity period, windows, §13/§15.9 validation, auto LIFETIME/ONE_TIME items with carry-forward, PERIODIC bulk-add).
+### 2026-10-14 — Step 5 ✅ Audit run creation
+
+- **4-step wizard** (`/audit-runs/new`, auditors only): Scope (vendor or PE audit; vendor → its current units; PE → open units + Onboarding/Ad hoc) → Dates & windows (quick fill last month/quarter, suggested windows, §4 validation) → Items → Review.
+- **Items step**: LIFETIME/ONE_TIME created automatically (shows how many carry forward); PERIODIC items get periods via bulk add (monthly, FY quarterly, FY half-yearly, whole period, per item or all) or a custom period with optional due date; warning when a periodic item has no periods (S2).
+- Blocking reasons from the server (§15.9 two-tier, §13 closed unit, vendor not assigned) shown with a link to fix the assignment.
+- **Audit runs list**: code, party + type, unit/PE, activity period, phase, review progress, score; filters by type and phase; scoped per role (§18).
+- **Run detail** (basic): header, KPIs, item list with snapshots, status and carry-forward badges. Full review workspace comes in Step 6.
+- **Domain** (`lib/domain/audit-runs.ts`, tested): date rules, window suggestions, phase derivation, FY-aligned period generation.
+- **Mock**: materialisation with write-once snapshots, Mode A carry-forward (§15.8), overlap/closure/coverage checks, `AR-YYYY-NNNN` codes (DB v5).
+- **Tests: 61 passing.**
+
+**Next: Step 6**: Run workspace: party evidence upload (1–3 files, NA proposal), auditor review (3 paths, stamp C/NA/NC, remarks, validTo), Window 2 trigger, publish with checks.
