@@ -179,15 +179,15 @@ export function Overview() {
               </Button>
             }
           >
-            <div className="-mx-6 -my-4 overflow-x-auto">
+            <div className="-mx-(--card-spacing) -my-4 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="pl-6">Run</TableHead>
+                    <TableHead className="pl-(--card-spacing)">Run</TableHead>
                     <TableHead>Audited party</TableHead>
                     <TableHead>Activity period</TableHead>
                     <TableHead>Phase</TableHead>
-                    <TableHead className="pr-6 text-right">Score</TableHead>
+                    <TableHead className="pr-(--card-spacing) text-right">Score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -197,7 +197,7 @@ export function Overview() {
                       className="cursor-pointer"
                       onClick={() => router.push(`/audit-runs/${run.id}`)}
                     >
-                      <TableCell className="pl-6 font-mono text-xs text-primary">{run.code}</TableCell>
+                      <TableCell className="pl-(--card-spacing) font-mono text-xs text-primary">{run.code}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium">{run.partyName}</span>
@@ -212,7 +212,9 @@ export function Overview() {
                       <TableCell>
                         <StatusBadge meta={runPhaseMeta[run.phase]} />
                       </TableCell>
-                      <TableCell className="pr-6 text-right font-medium tabular">{formatScore(run.score)}</TableCell>
+                      <TableCell className="pr-(--card-spacing) text-right font-medium tabular">
+                        {formatScore(run.score)}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {data.recentRuns.length === 0 && (

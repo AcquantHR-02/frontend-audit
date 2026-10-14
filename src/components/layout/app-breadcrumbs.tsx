@@ -28,8 +28,8 @@ export function AppBreadcrumbs() {
   }
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList className="text-[13px]">
+    <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
+      <BreadcrumbList className="flex-nowrap text-[13px]">
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
           return (
@@ -37,7 +37,7 @@ export function AppBreadcrumbs() {
               {index > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem className={index < crumbs.length - 2 ? "hidden sm:inline-flex" : undefined}>
                 {isLast ? (
-                  <BreadcrumbPage className="font-medium">{crumb.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="truncate font-medium">{crumb.label}</BreadcrumbPage>
                 ) : crumb.href ? (
                   <BreadcrumbLink asChild>
                     <Link href={crumb.href}>{crumb.label}</Link>

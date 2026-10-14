@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Audit Management System — Frontend
 
-## Getting Started
+Frontend for the **Acquant HR Audit System**: vendor and Principal Employer compliance audits with
+windowed evidence collection, auditor review, findings and score reporting.
 
-First, run the development server:
+Business rules follow `Audit_System_Documentation_V6.docx`. The full build log, decisions and the
+API contract notes for the backend are in **[PROGRESS.md](./PROGRESS.md)**.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # first time only
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs against an in-browser **mock backend (MSW)** by default. Demo accounts (password `Password@123`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Role          | Email                    |
+| ------------- | ------------------------ |
+| AUDITOR_ADMIN | `admin@acquanthr.test`   |
+| AUDITOR_USER  | `auditor@acquanthr.test` |
+| VENDOR_USER   | `vendor@rathna.test`     |
+| PE_USER       | `pe@veerometals.test`    |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Mock data lives in the browser's localStorage; clear site data to reset it.
 
-## Learn More
+## Connecting the real backend
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# .env.local
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
+NEXT_PUBLIC_API_MOCKING=disabled
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Every endpoint the UI calls is listed in PROGRESS.md › _Open Questions_; the request/response types are in
+`src/types/`. The mock handlers in `src/mocks/handlers/` are an executable reference of the expected behaviour.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Command             | What it does                         |
+| ------------------- | ------------------------------------ |
+| `npm run dev`       | Dev server                           |
+| `npm run build`     | Production build                     |
+| `npm test`          | Unit + integration tests (Vitest)    |
+| `npm run lint`      | ESLint (incl. import-boundary rules) |
+| `npm run typecheck` | TypeScript                           |
+| `npm run format`    | Prettier                             |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router) · React 19 · TypeScript · Redux Toolkit + RTK Query · shadcn/ui (Radix) ·
+Tailwind CSS v4 · TanStack Table · react-hook-form + zod · nuqs · Recharts · ExcelJS · MSW · Vitest.
+
+## Structure
+
+```
+src/
+  app/          routes only (thin pages)
+  features/     business modules: auth, dashboard, audit-runs, findings, assignments, masters, users, reports, audit-trail
+  components/   ui (shadcn) · layout (shell) · shared (DataTable, dialogs, badges…)
+  lib/          auth (permissions) · domain (pure business rules, tested) · export (Excel) · utils
+  store/        Redux store, RTK Query base API
+  mocks/        MSW mock backend + seed data
+  types/        domain + API types
+```
+
+Features import each other only through their `index.ts`; shared layers never import features (enforced by ESLint).

@@ -20,12 +20,17 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, hint, tone, icon, className }: KpiCardProps) {
   return (
-    <div className={cn("rounded-lg border bg-card p-4 shadow-xs", className)}>
+    <div className={cn("min-w-0 rounded-lg border bg-card p-3 shadow-xs sm:p-4", className)}>
       <div className="flex items-center justify-between gap-2 text-xs font-medium text-muted-foreground">
         {label}
         {icon && <span className="text-muted-foreground/70 [&_svg]:size-4">{icon}</span>}
       </div>
-      <div className={cn("mt-1.5 text-[22px] font-semibold tracking-tight tabular", tone && valueTone[tone])}>
+      <div
+        className={cn(
+          "mt-1.5 text-xl font-semibold tracking-tight break-words tabular sm:text-[22px]",
+          tone && valueTone[tone],
+        )}
+      >
         {value}
       </div>
       {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}

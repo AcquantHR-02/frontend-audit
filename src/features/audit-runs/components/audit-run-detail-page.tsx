@@ -49,7 +49,7 @@ const columns: DataTableColumn<AuditItemResult>[] = [
     accessorKey: "cadenceSnapshot",
     header: "Cadence",
     cell: ({ row }) => <StatusBadge meta={cadenceMeta[row.original.cadenceSnapshot]} dot={false} />,
-    meta: { className: "w-28" },
+    meta: { className: "hidden w-28 sm:table-cell" },
   },
   {
     id: "period",
@@ -60,13 +60,13 @@ const columns: DataTableColumn<AuditItemResult>[] = [
       ) : (
         <span className="text-muted-foreground">—</span>
       ),
-    meta: { className: "w-40" },
+    meta: { className: "hidden w-40 md:table-cell" },
   },
   {
     accessorKey: "evidenceCount",
     header: "Evidence",
     cell: ({ row }) => <span className="text-muted-foreground tabular">{row.original.evidenceCount || "—"}</span>,
-    meta: { className: "w-20" },
+    meta: { className: "hidden w-20 lg:table-cell" },
   },
   {
     id: "status",
@@ -225,7 +225,7 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+          <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="max-w-full overflow-x-auto">
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="action">{isParty ? "To upload" : "Needs attention"}</TabsTrigger>

@@ -159,7 +159,7 @@ export function ChecklistEditor({ masterItems, versions, canEdit, isSaving, onSa
                       <li key={item.id}>
                         <label
                           className={cn(
-                            "flex items-start gap-3 px-4 py-2.5 hover:bg-accent/40",
+                            "flex flex-wrap items-start gap-x-3 gap-y-1.5 px-4 py-2.5 hover:bg-accent/40 sm:flex-nowrap",
                             canEdit ? "cursor-pointer" : "cursor-default",
                           )}
                         >
@@ -171,8 +171,10 @@ export function ChecklistEditor({ masterItems, versions, canEdit, isSaving, onSa
                               update((next) => (checked ? next.add(item.id) : next.delete(item.id)))
                             }
                           />
-                          <span className="min-w-0 flex-1">{item.description}</span>
-                          <span className="flex shrink-0 items-center gap-1.5">
+                          <span className="min-w-0 flex-1 basis-[calc(100%-2rem)] sm:basis-auto">
+                            {item.description}
+                          </span>
+                          <span className="ml-7 flex shrink-0 items-center gap-1.5 sm:ml-0">
                             {isNew && <StatusBadge tone="info" label="New" dot={false} />}
                             <span className="w-14 text-right font-mono text-[11px] text-muted-foreground">
                               {item.stateCode ?? "National"}

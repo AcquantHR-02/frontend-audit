@@ -57,7 +57,7 @@ const columns: DataTableColumn<AuditEvent>[] = [
         <span className="font-mono text-[11px] text-muted-foreground">{row.original.actorRole}</span>
       </div>
     ),
-    meta: { className: "w-48" },
+    meta: { className: "hidden w-48 md:table-cell" },
   },
   {
     accessorKey: "action",

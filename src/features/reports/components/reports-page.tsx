@@ -99,18 +99,30 @@ export function ReportsPage() {
           <FilterSelect label="Principal Employer" value={peId} onChange={setPeId} options={peOptions} />
         )}
         <FilterSelect label="Type" value={type} onChange={setType} options={typeOptions} />
-        <div className="flex items-end gap-2">
-          <div className="space-y-1">
+        <div className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
+          <div className="min-w-36 flex-1 space-y-1 sm:flex-none">
             <Label htmlFor="rep-from" className="text-xs text-muted-foreground">
               Activity ending from
             </Label>
-            <Input id="rep-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
+            <Input
+              id="rep-from"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="w-full sm:w-40"
+            />
           </div>
-          <div className="space-y-1">
+          <div className="min-w-36 flex-1 space-y-1 sm:flex-none">
             <Label htmlFor="rep-to" className="text-xs text-muted-foreground">
               to
             </Label>
-            <Input id="rep-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+            <Input
+              id="rep-to"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="w-full sm:w-40"
+            />
           </div>
         </div>
       </div>

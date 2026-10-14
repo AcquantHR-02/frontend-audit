@@ -75,7 +75,7 @@ export function AuditRunsPage() {
           {formatDateRange(row.original.activityPeriodStart, row.original.activityPeriodEnd)}
         </span>
       ),
-      meta: { className: "w-48" },
+      meta: { className: "hidden w-48 md:table-cell" },
     },
     {
       accessorKey: "phase",
@@ -100,7 +100,7 @@ export function AuditRunsPage() {
           </div>
         );
       },
-      meta: { className: "w-40" },
+      meta: { className: "hidden w-40 lg:table-cell" },
     },
     {
       id: "score",
@@ -113,7 +113,7 @@ export function AuditRunsPage() {
       accessorKey: "createdAt",
       header: ({ column }) => <SortableHeader column={column} title="Created" />,
       cell: ({ row }) => <span className="text-muted-foreground tabular">{formatDate(row.original.createdAt)}</span>,
-      meta: { className: "w-28" },
+      meta: { className: "hidden w-28 xl:table-cell" },
     },
   ];
 

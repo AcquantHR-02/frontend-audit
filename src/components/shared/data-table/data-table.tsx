@@ -119,8 +119,8 @@ export function DataTable<TData extends RowData>({
           {isLoading ? (
             Array.from({ length: skeletonRows }, (_, i) => (
               <TableRow key={i} className="hover:bg-transparent">
-                {columns.map((_, j) => (
-                  <TableCell key={j} className="py-3">
+                {columns.map((column, j) => (
+                  <TableCell key={j} className={cn("py-3", column.meta?.className)}>
                     <Skeleton className={cn("h-4", j === 0 ? "w-40" : "w-20")} />
                   </TableCell>
                 ))}

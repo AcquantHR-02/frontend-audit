@@ -92,13 +92,13 @@ export function PrincipalEmployerDetailPage({ peId }: { peId: string }) {
     {
       accessorKey: "stateCode",
       header: ({ column }) => <SortableHeader column={column} title="State" />,
-      meta: { className: "w-24" },
+      meta: { className: "hidden w-24 sm:table-cell" },
     },
     {
       accessorKey: "activeVendorCount",
       header: ({ column }) => <SortableHeader column={column} title="Vendors" />,
       cell: ({ row }) => <span className="tabular">{row.original.activeVendorCount}</span>,
-      meta: { className: "w-28" },
+      meta: { className: "hidden w-28 md:table-cell" },
     },
     {
       accessorKey: "closedAt",

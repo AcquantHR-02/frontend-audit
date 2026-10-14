@@ -102,7 +102,7 @@ export function UsersPage() {
       header: ({ column }) => <SortableHeader column={column} title="Scope" />,
       cell: ({ row }) =>
         row.original.scopeName ?? <span className="text-muted-foreground">All Principal Employers & vendors</span>,
-      meta: { className: "w-56" },
+      meta: { className: "hidden w-56 lg:table-cell" },
     },
     {
       id: "status",
@@ -129,7 +129,7 @@ export function UsersPage() {
       accessorKey: "updatedAt",
       header: ({ column }) => <SortableHeader column={column} title="Updated" />,
       cell: ({ row }) => <span className="text-muted-foreground tabular">{formatDate(row.original.updatedAt)}</span>,
-      meta: { className: "w-32" },
+      meta: { className: "hidden w-32 md:table-cell" },
     },
     {
       id: "actions",

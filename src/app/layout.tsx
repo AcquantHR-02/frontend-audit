@@ -16,7 +16,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full`} suppressHydrationWarning>
-      <body className="min-h-full">
+      {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla) inject attributes on <body> */}
+      <body className="min-h-full" suppressHydrationWarning>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

@@ -28,7 +28,7 @@ export function RowActions({ actions, label = "Row actions" }: { actions: RowAct
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon-sm" aria-label={label}>
+        <Button variant="ghost" size="icon-sm" aria-label={label} className="pointer-coarse:size-10">
           <MoreHorizontalIcon />
         </Button>
       </DropdownMenuTrigger>

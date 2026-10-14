@@ -84,7 +84,7 @@ export function ChecklistMasterPage({ kind }: { kind: ChecklistKind }) {
     {
       accessorKey: "description",
       header: ({ column }) => <SortableHeader column={column} title="Requirement" />,
-      cell: ({ row }) => <span className="line-clamp-2 min-w-64">{row.original.description}</span>,
+      cell: ({ row }) => <span className="line-clamp-2 min-w-48 sm:min-w-64">{row.original.description}</span>,
     },
     {
       accessorKey: "stateCode",
@@ -95,7 +95,7 @@ export function ChecklistMasterPage({ kind }: { kind: ChecklistKind }) {
         ) : (
           <span className="text-muted-foreground">National</span>
         ),
-      meta: { className: "w-28" },
+      meta: { className: "hidden w-28 sm:table-cell" },
     },
     {
       accessorKey: "cadence",

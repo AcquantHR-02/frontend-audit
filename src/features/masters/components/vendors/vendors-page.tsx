@@ -66,7 +66,7 @@ export function VendorsPage() {
       accessorKey: "updatedAt",
       header: ({ column }) => <SortableHeader column={column} title="Last updated" />,
       cell: ({ row }) => <span className="text-muted-foreground tabular">{formatDate(row.original.updatedAt)}</span>,
-      meta: { className: "w-36" },
+      meta: { className: "hidden w-36 md:table-cell" },
     },
     {
       id: "actions",

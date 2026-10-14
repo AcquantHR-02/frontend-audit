@@ -90,17 +90,17 @@ audit-frontend/
 
 ## 4. Roadmap
 
-| #   | Step                                                                                                              | Status     |
-| --- | ----------------------------------------------------------------------------------------------------------------- | ---------- |
-| 1   | Foundation: deps, folders, shadcn, domain types, RTK store + baseApi, MSW seed, providers, tooling, showcase page | ✅ Done    |
-| 2   | Auth (login, JWT, change-password) + RBAC + app shell (sidebar, topbar, role-filtered nav)                        | ✅ Done    |
-| 3   | Master data: States, Acts, PEs + Units (close/reopen), Vendors, Checklist masters, Users                          | ✅ Done    |
-| 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ✅ Done    |
-| 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ✅ Done    |
-| 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ✅ Done    |
-| 7   | Findings: list, detail, remediation uploads, resolve                                                              | ✅ Done    |
-| 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ✅ Done    |
-| 9   | Responsive polish pass across the whole app (mobile / tablet / desktop) — user request                            | ⏳ Pending |
+| #   | Step                                                                                                              | Status  |
+| --- | ----------------------------------------------------------------------------------------------------------------- | ------- |
+| 1   | Foundation: deps, folders, shadcn, domain types, RTK store + baseApi, MSW seed, providers, tooling, showcase page | ✅ Done |
+| 2   | Auth (login, JWT, change-password) + RBAC + app shell (sidebar, topbar, role-filtered nav)                        | ✅ Done |
+| 3   | Master data: States, Acts, PEs + Units (close/reopen), Vendors, Checklist masters, Users                          | ✅ Done |
+| 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ✅ Done |
+| 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ✅ Done |
+| 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ✅ Done |
+| 7   | Findings: list, detail, remediation uploads, resolve                                                              | ✅ Done |
+| 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ✅ Done |
+| 9   | Responsive polish pass across the whole app (mobile / tablet / desktop) — user request                            | ✅ Done |
 
 ---
 
@@ -279,4 +279,18 @@ npm run lint && npm run typecheck
 - **Retention** (`/admin/retention`): next purge date, cutoff FY, scheduled runs, 30/7-day notice banner (§12.14).
 - **Tests: 73 passing.**
 
-**Next: Step 9**: responsive polish across all screens.
+### 2026-10-14 — Step 9 ✅ Responsive pass & wrap-up
+
+- Audited every screen for phone (360 px) / tablet / desktop:
+  - Secondary table columns hide on small screens (`hidden md:table-cell` via column meta); tables still scroll inside their box when needed; skeleton rows match.
+  - KPI cards can't overflow in the 2-column phone grid; header breadcrumbs truncate so icons never get pushed off-screen.
+  - Reports date filters, workspace tabs and checklist-editor rows wrap or scroll on phones.
+  - Row-action buttons grow to 40 px on touch screens (`pointer-coarse:`).
+  - Already responsive from earlier steps: collapsible sidebar → mobile drawer, stacked forms/dialogs, full-width drawer on phones, wrapping toolbars and page headers.
+- Fixed a hydration warning caused by a browser extension (ColorZilla) injecting attributes on `<body>`.
+- Replaced the default README with project setup, backend switch and structure.
+- **Verification note:** checked by code audit, type-check, lint, build and 73 tests; not by device screenshots. Please spot-check with browser DevTools device mode.
+
+## 8. Status
+
+All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).

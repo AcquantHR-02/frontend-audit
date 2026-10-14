@@ -85,7 +85,7 @@ export function VendorUnitsPage() {
       accessorKey: "effectiveFrom",
       header: ({ column }) => <SortableHeader column={column} title="From" />,
       cell: ({ row }) => <span className="tabular">{formatDate(row.original.effectiveFrom)}</span>,
-      meta: { className: "w-32" },
+      meta: { className: "hidden w-32 sm:table-cell" },
     },
     {
       accessorKey: "effectiveTo",
@@ -95,7 +95,7 @@ export function VendorUnitsPage() {
           {row.original.effectiveTo ? formatDate(row.original.effectiveTo) : "Open"}
         </span>
       ),
-      meta: { className: "w-32" },
+      meta: { className: "hidden w-32 md:table-cell" },
     },
     {
       accessorKey: "status",

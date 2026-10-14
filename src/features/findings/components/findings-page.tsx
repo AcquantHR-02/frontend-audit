@@ -51,7 +51,7 @@ export function FindingsPage() {
       header: "Finding",
       enableSorting: false,
       cell: ({ row }) => (
-        <div className="flex min-w-64 flex-col">
+        <div className="flex min-w-48 flex-col sm:min-w-64">
           <span className="line-clamp-2 font-medium">{row.original.requirement}</span>
           <span className="text-xs text-muted-foreground">
             <span className="font-mono">{row.original.actName}</span>
@@ -91,7 +91,7 @@ export function FindingsPage() {
       accessorKey: "createdAt",
       header: ({ column }) => <SortableHeader column={column} title="Opened" />,
       cell: ({ row }) => <span className="text-muted-foreground tabular">{formatDate(row.original.createdAt)}</span>,
-      meta: { className: "w-28" },
+      meta: { className: "hidden w-28 md:table-cell" },
     },
   ];
 

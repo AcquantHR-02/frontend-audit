@@ -53,7 +53,7 @@ export function ActsPage() {
       accessorKey: "category",
       header: ({ column }) => <SortableHeader column={column} title="Category" />,
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.category ?? "—"}</span>,
-      meta: { className: "w-40" },
+      meta: { className: "hidden w-40 lg:table-cell" },
     },
     {
       id: "items",
@@ -64,7 +64,7 @@ export function ActsPage() {
           {row.original.checklistItemCount} vendor · {row.original.peChecklistItemCount} PE
         </span>
       ),
-      meta: { className: "w-40" },
+      meta: { className: "hidden w-40 md:table-cell" },
     },
     {
       accessorKey: "isActive",
