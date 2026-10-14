@@ -3,11 +3,11 @@
  * persist to localStorage — mutations survive reloads, like a real backend.
  * Bump DB_VERSION whenever the seed shape changes to discard stale data.
  */
-import type { AuditItemResult, AuditRun, EvidenceRecord } from "@/types/domain";
+import type { AuditItemResult, AuditRun, EvidenceRecord, Finding, FindingAttachment } from "@/types/domain";
 import * as seed from "./seed";
 
 const STORAGE_KEY = "ams.mock-db";
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 function createSeedDb() {
   return {
@@ -25,6 +25,8 @@ function createSeedDb() {
     auditRuns: [] as AuditRun[],
     airs: [] as AuditItemResult[],
     evidence: [] as EvidenceRecord[],
+    findings: [] as Finding[],
+    findingAttachments: [] as FindingAttachment[],
     users: structuredClone(seed.users),
     /** Plain-text only because this is a mock; the real backend stores hashes. */
     passwords: Object.fromEntries(seed.users.map((u) => [u.id, seed.MOCK_PASSWORD])) as Record<string, string>,

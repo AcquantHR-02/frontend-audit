@@ -1,6 +1,15 @@
 import { baseApi, providesPage } from "@/store";
 import type { Page, PageRequest } from "@/types/api";
-import type { AuditItemResult, AuditRunView, AuditType, Cadence, RunPhase, TriggerOccasion } from "@/types/domain";
+import type {
+  AuditItemResult,
+  AuditRunView,
+  AuditType,
+  Cadence,
+  ComplianceStatus,
+  EvidenceRecord,
+  RunPhase,
+  TriggerOccasion,
+} from "@/types/domain";
 
 export interface RunScope {
   auditType: AuditType;
@@ -34,6 +43,21 @@ export interface CreateRunRequest extends RunScope {
   periodicItems: { checklistItemId: string; periods: PeriodInput[] }[];
 }
 
+export interface PublishCheck {
+  canPublish: boolean;
+  blocking: string[];
+  warnings: string[];
+  findingsToOpen: number;
+}
+
+export interface ReviewRequest {
+  airId: string;
+  runId: string;
+  complianceStatus: ComplianceStatus;
+  auditRemarks: string;
+  validTo?: string | null;
+}
+
 export type AuditRunListParams = PageRequest & { auditType?: AuditType; phase?: RunPhase };
 
 export const auditRunsApi = baseApi.injectEndpoints({
@@ -61,6 +85,69 @@ export const auditRunsApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/audit-runs", method: "POST", body }),
       invalidatesTags: [{ type: "AuditRun", id: "LIST" }, "Dashboard"],
     }),
+
+    /* ----- Workspace: evidence, review, phases ----- */
+    getAirEvidence: build.query<EvidenceRecord[], string>({
+      query: (airId) => `/airs/${airId}/evidence`,
+      providesTags: (_r, _e, airId) => [{ type: "Evidence", id: airId }],
+    }),
+    /** Multipart: files[], partyRemarks, naProposedByParty. */
+    uploadEvidence: build.mutation<EvidenceRecord, { airId: string; runId: string; form: FormData }>({
+      query: ({ airId, form }) => ({ url: `/airs/${airId}/evidence`, method: "POST", body: form }),
+      invalidatesTags: (_r, _e, { airId, runId }) => [
+        { type: "Evidence", id: airId },
+        { type: "AuditItem", id: `run:${runId}` },
+        { type: "AuditRun", id: runId },
+      ],
+    }),
+    reviewAir: build.mutation<AuditItemResult, ReviewRequest>({
+      query: ({ airId, complianceStatus, auditRemarks, validTo }) => ({
+        url: `/airs/${airId}/review`,
+        method: "PATCH",
+        body: { complianceStatus, auditRemarks, validTo },
+      }),
+      invalidatesTags: (_r, _e, { airId, runId }) => [
+        { type: "Evidence", id: airId },
+        { type: "AuditItem", id: `run:${runId}` },
+        { type: "AuditRun", id: runId },
+        { type: "AuditRun", id: "LIST" },
+      ],
+    }),
+    startReview: build.mutation<AuditRunView, string>({
+      query: (runId) => ({ url: `/audit-runs/${runId}/start-review`, method: "POST" }),
+      invalidatesTags: (_r, _e, runId) => [
+        { type: "AuditRun", id: runId },
+        { type: "AuditRun", id: "LIST" },
+      ],
+    }),
+    endReview: build.mutation<AuditRunView, { runId: string; window2Start?: string; window2End?: string }>({
+      query: ({ runId, ...body }) => ({ url: `/audit-runs/${runId}/end-review`, method: "POST", body }),
+      invalidatesTags: (_r, _e, { runId }) => [
+        { type: "AuditRun", id: runId },
+        { type: "AuditRun", id: "LIST" },
+      ],
+    }),
+    closeWindow2: build.mutation<AuditRunView, string>({
+      query: (runId) => ({ url: `/audit-runs/${runId}/close-window2`, method: "POST" }),
+      invalidatesTags: (_r, _e, runId) => [
+        { type: "AuditRun", id: runId },
+        { type: "AuditRun", id: "LIST" },
+      ],
+    }),
+    getPublishCheck: build.query<PublishCheck, string>({
+      query: (runId) => `/audit-runs/${runId}/publish-check`,
+      keepUnusedDataFor: 0,
+    }),
+    publishRun: build.mutation<AuditRunView, string>({
+      query: (runId) => ({ url: `/audit-runs/${runId}/publish`, method: "POST" }),
+      invalidatesTags: (_r, _e, runId) => [
+        { type: "AuditRun", id: runId },
+        { type: "AuditRun", id: "LIST" },
+        { type: "AuditItem", id: `run:${runId}` },
+        "Finding",
+        "Dashboard",
+      ],
+    }),
   }),
 });
 
@@ -70,4 +157,12 @@ export const {
   useGetRunItemsQuery,
   usePreviewRunChecklistQuery,
   useCreateAuditRunMutation,
+  useGetAirEvidenceQuery,
+  useUploadEvidenceMutation,
+  useReviewAirMutation,
+  useStartReviewMutation,
+  useEndReviewMutation,
+  useCloseWindow2Mutation,
+  useGetPublishCheckQuery,
+  usePublishRunMutation,
 } = auditRunsApi;

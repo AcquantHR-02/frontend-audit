@@ -120,7 +120,7 @@ function resolveScope(scope: RunScope) {
   return { unit, items };
 }
 
-function toRunView(run: AuditRun): AuditRunView {
+export function toRunView(run: AuditRun): AuditRunView {
   const unit = db.peUnits.find((u) => u.id === run.peUnitId);
   const pe = db.principalEmployers.find((p) => p.id === unit?.peId);
   const airs = db.airs.filter((a) => a.runId === run.id);
@@ -144,7 +144,7 @@ function toRunView(run: AuditRun): AuditRunView {
 }
 
 /** §18 visibility: vendors see own runs; PE users see own PE audits + vendor audits at own units. */
-function visibleTo(user: User, run: AuditRun) {
+export function visibleTo(user: User, run: AuditRun) {
   if (can(user, Permission.AUDIT_RUNS_CREATE)) return true;
   if (user.role === "VENDOR_USER") return run.vendorId === user.vendorId;
   if (user.role === "PE_USER") {

@@ -54,23 +54,30 @@ export function suggestWindows(activityPeriodEnd: IsoDate) {
   };
 }
 
-/** §4 — phase derived from window dates + publish state (never stored). */
+/**
+ * §4 — phase derived from window dates + publish state (never stored).
+ * `reviewStart` / `finalReviewStart` record an auditor closing a window early.
+ */
 export function deriveRunPhase(
   run: Pick<RunDates, "window1Start" | "window1End"> & {
     window2Start: IsoDate | null;
     window2End: IsoDate | null;
     publishedAt: string | null;
+    reviewStart?: IsoDate | null;
+    finalReviewStart?: IsoDate | null;
   },
   today: IsoDate,
 ): RunPhase {
   if (run.publishedAt) return "PUBLISHED";
+  if (run.finalReviewStart && run.finalReviewStart <= today) return "FINAL_REVIEW";
+  if (run.window2Start && run.window2End) {
+    if (today > run.window2End) return "FINAL_REVIEW";
+    if (today >= run.window2Start) return "WINDOW_2";
+    return "REVIEW";
+  }
+  if (run.reviewStart && run.reviewStart <= today) return "REVIEW";
   if (today < run.window1Start) return "SCHEDULED";
   if (today <= run.window1End) return "WINDOW_1";
-  if (run.window2Start && run.window2End) {
-    if (today < run.window2Start) return "REVIEW";
-    if (today <= run.window2End) return "WINDOW_2";
-    return "FINAL_REVIEW";
-  }
   return "REVIEW";
 }
 

@@ -97,7 +97,7 @@ audit-frontend/
 | 3   | Master data: States, Acts, PEs + Units (close/reopen), Vendors, Checklist masters, Users                          | ✅ Done    |
 | 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ✅ Done    |
 | 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ✅ Done    |
-| 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ⏳ Pending |
+| 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ✅ Done    |
 | 7   | Findings: list, detail, remediation uploads, resolve                                                              | ⏳ Pending |
 | 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ⏳ Pending |
 | 9   | Responsive polish pass across the whole app (mobile / tablet / desktop) — user request                            | ⏳ Pending |
@@ -135,6 +135,8 @@ audit-frontend/
 - Master-data endpoints the frontend expects (all paginated `?page&size&sort&search` + filters): `/states`, `/acts`, `/principal-employers`, `/pe-units?peId&status`, `/vendors`, `/checklist-items`, `/pe-checklist-items` (`?actId&stateId=<id|NATIONAL>&cadence&active`), `/users?role&active`. Soft delete via `PATCH /{resource}/{id}/status {isActive}`. Units: `POST /pe-units/{id}/close {closedOn}` → `{unit, endedAssignments}`, `POST /pe-units/{id}/reopen`. Users: `POST /users/{id}/reset-password`, `POST /users/{id}/unlock`.
 - Assignment endpoints: `GET/POST /vendor-unit-assignments` (`?vendorId&peUnitId&status=FUTURE|CURRENT|ENDED`), `POST /vendor-unit-assignments/{id}/end {effectiveTo}`; `GET/POST /vendor-checklist-assignments?vendorId&peUnitId` and `GET/POST /pe-checklist-assignments?peId` (versions newest first; POST creates a version and closes the previous one the day before). Checklist master supports `?forStates=<ids>` (state items + NATIONAL).
 - Audit run endpoints: `POST /audit-runs/checklist-preview` (scope → items + carry-forward flags, or §15.9/§13 error codes `ASSIGNMENT_NOT_FOUND`, `ASSIGNMENT_CHANGED_IN_PERIOD`, `UNIT_CLOSED`, `VENDOR_NOT_ASSIGNED`), `POST /audit-runs` (dates + `periodicItems[{checklistItemId, periods[]}]`; `RUN_OVERLAP` 409), `GET /audit-runs?auditType&phase`, `GET /audit-runs/{id}`, `GET /audit-runs/{id}/items`. Runs carry a human code `AR-YYYY-NNNN` (new field, please add).
+- Workspace endpoints: `GET/POST /airs/{id}/evidence` (multipart `files[]`, `partyRemarks`, `naProposedByParty`), `PATCH /airs/{id}/review {complianceStatus, auditRemarks, validTo}`, `POST /audit-runs/{id}/start-review`, `/end-review {window2Start?, window2End?}` (409 `WINDOW2_REQUIRED`), `/close-window2`, `GET /audit-runs/{id}/publish-check`, `POST /audit-runs/{id}/publish` (opens findings). Phase is derived from dates plus `reviewStart` / `finalReviewStart` (early window closure).
+- File storage: mock keeps files only for the browser session; backend should return signed download URLs.
 - List rows include derived counts (see `*Summary` / `*View` types in `src/types/domain/master.ts`).
 - Temporary passwords: mock returns them to the admin; production should email them instead.
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
@@ -245,4 +247,16 @@ npm run lint && npm run typecheck
 - **Mock**: materialisation with write-once snapshots, Mode A carry-forward (§15.8), overlap/closure/coverage checks, `AR-YYYY-NNNN` codes (DB v5).
 - **Tests: 61 passing.**
 
-**Next: Step 6**: Run workspace: party evidence upload (1–3 files, NA proposal), auditor review (3 paths, stamp C/NA/NC, remarks, validTo), Window 2 trigger, publish with checks.
+### 2026-10-14 — Step 6 ✅ Run workspace
+
+- **Workspace** (`/audit-runs/[runId]`): phase timeline (Window 1 → Review → Window 2 → Final review → Published, with dates/"Skipped"), KPIs (submitted, C / NA / NC, score), item table with tabs (All / Needs attention or To upload / Submitted / Stamped) and search, role banner for the audited party.
+- **Item drawer**: snapshot details, evidence history (uploader, time, files, remarks, dashed _Proposed NA_, auditor upload, carried-forward, valid-to).
+  - **Party upload (Path 1)**: drag-and-drop (react-dropzone), 1–3 files or NA proposal with 0–3 files, mandatory remarks (labelled Vendor/PE remarks); allowed in Window 1, and in Window 2 only for NC/unstamped items.
+  - **Auditor upload (Path 2)** on the party's behalf; **Path 3** = stamp with no evidence (remarks carry the trail).
+  - **Review**: C / NA / NC with explanations, mandatory audit remarks, valid-to for one-time items with evidence; re-stamps allowed until publish.
+- **Phase actions** (auditors): Start review (close Window 1 early), End review (end-of-review evaluation forces Window 2 when anything is pending/NC; one Window 2 per run), Close Window 2, Publish (blocking checks + S2 warning + findings count).
+- **Publish** freezes the party and opens one finding per Not complied item (UNIQUE per item).
+- **Domain** (`lib/domain/review.ts`, tested): upload windows, file rules, validTo rule, end-of-review evaluation, publish check.
+- **Tests: 68 passing**, incl. a full end-to-end workflow test. API tests run in the Node test environment (jsdom's FormData hangs with Node fetch); mock latency is skipped in tests.
+
+**Next: Step 7**: Findings: list (open/resolved, per party), detail with remediation uploads (1–3 files + remarks), auditor edits and resolve.

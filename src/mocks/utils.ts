@@ -6,7 +6,8 @@ import type { ApiError, Page } from "@/types/api";
 export const apiUrl = (path: string) => `${env.apiBaseUrl}${path}`;
 
 /** Realistic latency so loading states are visible during development. */
-export const networkDelay = () => delay(200 + Math.random() * 300);
+export const networkDelay = () =>
+  process.env.NODE_ENV === "test" ? Promise.resolve() : delay(200 + Math.random() * 300);
 
 export function errorResponse(status: number, message: string, extra: Partial<ApiError> = {}) {
   return HttpResponse.json<ApiError>({ status, message, ...extra }, { status });

@@ -1,3 +1,4 @@
+// @vitest-environment node -- API tests: native fetch/FormData (jsdom FormData hangs with Node fetch)
 import { setupServer } from "msw/node";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assignmentsApi } from "@/features/assignments";
