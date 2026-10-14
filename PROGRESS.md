@@ -291,6 +291,11 @@ npm run lint && npm run typecheck
 - Replaced the default README with project setup, backend switch and structure.
 - **Verification note:** checked by code audit, type-check, lint, build and 73 tests; not by device screenshots. Please spot-check with browser DevTools device mode.
 
+### 2026-10-14 — Extra: hover-to-open selects
+
+- All select boxes (shared shadcn `Select`) open on mouse hover after 120 ms and close 250 ms after the pointer leaves the trigger and list; click, keyboard and touch work as before (`openOnHover={false}` opts out).
+- Smooth animation: list drops below the trigger (popper) with a 200 ms fade + zoom + slide; chevron rotates; trigger border and item hover transitions.
+
 ## 8. Status
 
 All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).
