@@ -1,4 +1,4 @@
-import { baseApi, credentialsReceived, loggedOut } from "@/store";
+import { baseApi, credentialsReceived, loggedOut, userUpdated } from "@/store";
 import type { SessionUser } from "@/types/domain";
 
 export interface LoginRequest {
@@ -9,6 +9,11 @@ export interface LoginRequest {
 export interface AuthResponse {
   accessToken: string;
   user: SessionUser;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export const authApi = baseApi.injectEndpoints({
@@ -38,6 +43,18 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
+    changePassword: build.mutation<SessionUser, ChangePasswordRequest>({
+      query: (body) => ({ url: "/auth/change-password", method: "POST", body }),
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(userUpdated(data));
+        } catch {
+          // Shown inline by the form.
+        }
+      },
+    }),
+
     logout: build.mutation<void, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
@@ -50,4 +67,4 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useRefreshSessionMutation, useLogoutMutation } = authApi;
+export const { useLoginMutation, useRefreshSessionMutation, useChangePasswordMutation, useLogoutMutation } = authApi;

@@ -93,7 +93,7 @@ audit-frontend/
 | #   | Step                                                                                                              | Status     |
 | --- | ----------------------------------------------------------------------------------------------------------------- | ---------- |
 | 1   | Foundation: deps, folders, shadcn, domain types, RTK store + baseApi, MSW seed, providers, tooling, showcase page | ✅ Done    |
-| 2   | Auth (login, JWT, change-password) + RBAC + app shell (sidebar, topbar, role-filtered nav)                        | ⏳ Pending |
+| 2   | Auth (login, JWT, change-password) + RBAC + app shell (sidebar, topbar, role-filtered nav)                        | ✅ Done    |
 | 3   | Master data: States, Acts, PEs + Units (close/reopen), Vendors, Checklist masters, Users                          | ⏳ Pending |
 | 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ⏳ Pending |
 | 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ⏳ Pending |
@@ -129,6 +129,8 @@ audit-frontend/
 - Pagination / error response envelope format.
 - File upload: multipart to API, or pre-signed URLs?
 - Assumption to confirm: a `VendorChecklistAssignment` version holds the full ticked item set (`checklistItemIds[]`).
+- Auth endpoints the frontend expects: `POST /auth/login`, `/auth/refresh` (httpOnly cookie), `/auth/logout`, `/auth/change-password`, `GET /auth/me`. Error `code`s used: `INVALID_CREDENTIALS`, `ACCOUNT_LOCKED` (423), `ACCOUNT_INACTIVE`, `INVALID_CURRENT_PASSWORD`.
+- Password policy and lockout threshold (frontend assumes 8+ chars with upper/lower/digit/special, lock after 5 failures).
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
 
 ## 6a. Spec Questions (for the spec owner)
@@ -166,21 +168,38 @@ audit-frontend/
 
 ### Demo accounts (mock backend)
 
-| Role          | Email                    | Password       |
-| ------------- | ------------------------ | -------------- |
-| AUDITOR_ADMIN | `admin@acquanthr.test`   | `Password@123` |
-| AUDITOR_USER  | `auditor@acquanthr.test` | `Password@123` |
-| VENDOR_USER   | `vendor@rathna.test`     | `Password@123` |
-| PE_USER       | `pe@veerometals.test`    | `Password@123` |
+| Role          | Email                    | Password                                |
+| ------------- | ------------------------ | --------------------------------------- |
+| AUDITOR_ADMIN | `admin@acquanthr.test`   | `Password@123`                          |
+| AUDITOR_USER  | `auditor@acquanthr.test` | `Password@123`                          |
+| VENDOR_USER   | `vendor@rathna.test`     | `Password@123`                          |
+| PE_USER       | `pe@veerometals.test`    | `Password@123`                          |
+| AUDITOR_USER  | `newuser@acquanthr.test` | `Password@123` (forced password change) |
+
+> Mock data lives in your browser's localStorage. To reset it, clear site data for localhost (a "Reset demo data" button comes later).
 
 ### How to run
 
 ```bash
 npm install
 cp .env.example .env.local   # first time only
-npm run dev                  # http://localhost:3000 → /showcase
+npm run dev                  # http://localhost:3000 → /login
 npm test                     # unit + integration tests
 npm run lint && npm run typecheck
 ```
 
-**Next: Step 2**: login page, session restore, route protection, RBAC permissions, app shell (navy sidebar, top bar, breadcrumbs, role-filtered navigation).
+### 2026-10-14 — Step 2 ✅ Auth, RBAC & app shell
+
+- **Login** (`/login`): split-screen layout (navy gradient brand panel + form), zod validation, inline errors, server error banner with distinct _locked_ state, show/hide password, safe `?next=` redirect, demo-accounts helper (only when mocking is enabled).
+- **Session**: restored on page load via `/auth/refresh`; `AuthGuard` (protected pages) and `GuestGuard` (login page); sign-out clears the whole RTK Query cache.
+- **Forced password change** (`/change-password`, §18): live password-policy checklist; also reachable from the user menu.
+- **RBAC** (`lib/auth/permissions.ts`): 20 permissions mapped to the 4 roles per §18; `can()`, `canAny()`, `useCan()` hook.
+- **App shell**: collapsible navy-gradient sidebar (icon mode, mobile drawer, active indicator), sticky header with breadcrumbs, Ctrl/⌘+K command menu, notifications popover, user menu (role badge, theme, change password, sign out).
+- **Navigation config** (`config/navigation.ts`): single source for sidebar, breadcrumbs, command menu and route guarding.
+- **Route protection**: typed URLs outside the role's permissions show a 403 page.
+- **Overview** page with role-specific framing; placeholder pages for all 15 other modules (no dead links); styled 404.
+- **Mock backend**: per-user passwords, lock after 5 failed logins (423), change-password endpoint, 5th demo user `newuser@acquanthr.test` (must change password).
+- Removed the temporary `/showcase` page.
+- **Tests: 30 passing** (+ permissions, navigation, auth schemas, lockout, password change).
+
+**Next: Step 3**: Master data (States, Acts, PEs + Units with close/reopen, Vendors, Checklist masters, Users) with reusable DataTable, CRUD dialogs and soft-delete.

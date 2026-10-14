@@ -33,6 +33,9 @@ export const sessionSlice = createSlice({
     tokenRefreshed(state, action: PayloadAction<{ accessToken: string }>) {
       state.accessToken = action.payload.accessToken;
     },
+    userUpdated(state, action: PayloadAction<SessionUser>) {
+      state.user = action.payload;
+    },
     loggedOut(): SessionState {
       return { ...initialState, status: "anonymous" };
     },
@@ -44,5 +47,5 @@ export const sessionSlice = createSlice({
   },
 });
 
-export const { credentialsReceived, tokenRefreshed, loggedOut } = sessionSlice.actions;
+export const { credentialsReceived, tokenRefreshed, userUpdated, loggedOut } = sessionSlice.actions;
 export const { selectAccessToken, selectCurrentUser, selectSessionStatus } = sessionSlice.selectors;

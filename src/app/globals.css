@@ -221,3 +221,9 @@
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* Navy gradient on the shadcn sidebar (desktop + mobile sheet) without editing generated files */
+[data-slot="sidebar-inner"],
+[data-slot="sidebar"][data-mobile="true"] {
+  background-image: var(--sidebar-gradient);
+}

@@ -52,4 +52,45 @@ describe("auth + RTK Query pipeline (against MSW handlers)", () => {
     expect(vendors.totalElements).toBe(19);
     expect(store.getState().session.accessToken).not.toBe("mock.usr-admin.0");
   });
+
+  it("locks the account after 5 failed attempts and reports attempts left", async () => {
+    const store = makeStore();
+    const attempt = () =>
+      store
+        .dispatch(authApi.endpoints.login.initiate({ email: "pe@veerometals.test", password: "nope" }))
+        .unwrap()
+        .catch((e: unknown) => e);
+
+    expect(await attempt()).toMatchObject({ status: 401, message: expect.stringContaining("4 attempts left") });
+    for (let i = 0; i < 3; i++) await attempt();
+    expect(await attempt()).toMatchObject({ status: 423, code: "ACCOUNT_LOCKED" });
+
+    // Even the right password is refused while locked.
+    const locked = await store
+      .dispatch(authApi.endpoints.login.initiate({ email: "pe@veerometals.test", password: "Password@123" }))
+      .unwrap()
+      .catch((e: unknown) => e);
+    expect(locked).toMatchObject({ code: "ACCOUNT_LOCKED" });
+  });
+
+  it("forces and completes a first-login password change", async () => {
+    const store = makeStore();
+    const { user } = await store
+      .dispatch(authApi.endpoints.login.initiate({ email: "newuser@acquanthr.test", password: "Password@123" }))
+      .unwrap();
+    expect(user.mustChangePassword).toBe(true);
+
+    const wrongCurrent = await store
+      .dispatch(authApi.endpoints.changePassword.initiate({ currentPassword: "bad", newPassword: "N3w!Passw0rd" }))
+      .unwrap()
+      .catch((e: unknown) => e);
+    expect(wrongCurrent).toMatchObject({ code: "INVALID_CURRENT_PASSWORD" });
+
+    await store
+      .dispatch(
+        authApi.endpoints.changePassword.initiate({ currentPassword: "Password@123", newPassword: "N3w!Passw0rd" }),
+      )
+      .unwrap();
+    expect(store.getState().session.user?.mustChangePassword).toBe(false);
+  });
 });

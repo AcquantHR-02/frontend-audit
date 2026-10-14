@@ -227,4 +227,6 @@ export const users: User[] = [
   user("usr-auditor", "Karthik Menon", "auditor@acquanthr.test", "AUDITOR_USER"),
   user("usr-vendor", "Suresh Kumar", "vendor@rathna.test", "VENDOR_USER", { vendorId: "ven-rathna" }),
   user("usr-pe", "Priya Shetty", "pe@veerometals.test", "PE_USER", { peId: "pe-veero" }),
+  // Demonstrates the forced password change on first login (§18).
+  { ...user("usr-new", "Neha Joshi", "newuser@acquanthr.test", "AUDITOR_USER"), mustChangePassword: true },
 ];
