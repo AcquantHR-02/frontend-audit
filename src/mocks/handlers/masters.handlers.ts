@@ -270,6 +270,9 @@ function checklistHandlers(path: string, collection: () => ChecklistItem[], idPr
       const actId = url.searchParams.get("actId");
       const stateId = url.searchParams.get("stateId"); // "NATIONAL" or a state id
       const cadence = url.searchParams.get("cadence");
+      // Resolver (§7A Lock 2): items for these states OR national.
+      const forStates = url.searchParams.get("forStates")?.split(",").filter(Boolean);
+      if (forStates && item.stateId !== null && !forStates.includes(item.stateId)) return false;
       return (
         activeFilter(item, url) &&
         (!actId || item.actId === actId) &&

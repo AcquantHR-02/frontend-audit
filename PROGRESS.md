@@ -95,7 +95,7 @@ audit-frontend/
 | 1   | Foundation: deps, folders, shadcn, domain types, RTK store + baseApi, MSW seed, providers, tooling, showcase page | ✅ Done    |
 | 2   | Auth (login, JWT, change-password) + RBAC + app shell (sidebar, topbar, role-filtered nav)                        | ✅ Done    |
 | 3   | Master data: States, Acts, PEs + Units (close/reopen), Vendors, Checklist masters, Users                          | ✅ Done    |
-| 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ⏳ Pending |
+| 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ✅ Done    |
 | 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ⏳ Pending |
 | 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ⏳ Pending |
 | 7   | Findings: list, detail, remediation uploads, resolve                                                              | ⏳ Pending |
@@ -132,6 +132,7 @@ audit-frontend/
 - Auth endpoints the frontend expects: `POST /auth/login`, `/auth/refresh` (httpOnly cookie), `/auth/logout`, `/auth/change-password`, `GET /auth/me`. Error `code`s used: `INVALID_CREDENTIALS`, `ACCOUNT_LOCKED` (423), `ACCOUNT_INACTIVE`, `INVALID_CURRENT_PASSWORD`.
 - Password policy and lockout threshold (frontend assumes 8+ chars with upper/lower/digit/special, lock after 5 failures).
 - Master-data endpoints the frontend expects (all paginated `?page&size&sort&search` + filters): `/states`, `/acts`, `/principal-employers`, `/pe-units?peId&status`, `/vendors`, `/checklist-items`, `/pe-checklist-items` (`?actId&stateId=<id|NATIONAL>&cadence&active`), `/users?role&active`. Soft delete via `PATCH /{resource}/{id}/status {isActive}`. Units: `POST /pe-units/{id}/close {closedOn}` → `{unit, endedAssignments}`, `POST /pe-units/{id}/reopen`. Users: `POST /users/{id}/reset-password`, `POST /users/{id}/unlock`.
+- Assignment endpoints: `GET/POST /vendor-unit-assignments` (`?vendorId&peUnitId&status=FUTURE|CURRENT|ENDED`), `POST /vendor-unit-assignments/{id}/end {effectiveTo}`; `GET/POST /vendor-checklist-assignments?vendorId&peUnitId` and `GET/POST /pe-checklist-assignments?peId` (versions newest first; POST creates a version and closes the previous one the day before). Checklist master supports `?forStates=<ids>` (state items + NATIONAL).
 - List rows include derived counts (see `*Summary` / `*View` types in `src/types/domain/master.ts`).
 - Temporary passwords: mock returns them to the admin; production should email them instead.
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
@@ -221,4 +222,14 @@ npm run lint && npm run typecheck
 - **Tests: 41 passing** (+ masters API rules incl. §13 closure, users API, Vendors page UI by role).
 - Fixes: RTK `overrideExisting` in dev (Fast Refresh console errors), Testing Library cleanup.
 
-**Next: Step 4**: Assignments: vendor ↔ unit (versioned), vendor checklists per (vendor, unit) and PE checklists per PE (versioned, onboarding pre-tick, "Apply master").
+### 2026-10-14 — Step 4 ✅ Assignments
+
+- **Vendor units** (`/assignments/vendor-units`): list with Current / Starts later / Ended status, filters; assign vendor → PE → open unit with start date (overlaps and closed units rejected); end an assignment (§13 rule 7, no cascade).
+- **Shared checklist editor** for both vendor and PE checklists: grouped by Act with group checkboxes, search, "Apply master" (one-time copy, Lock 9), "New" badge for master items missing from the current version, onboarding default = everything pre-ticked (Lock 8), dated new versions, version history, §15.9 guidance.
+- **Vendor checklists** (`/assignments/vendor-checklists`): pick vendor → one of its current units; master resolved for the unit's state + NATIONAL.
+- **PE checklists** (`/assignments/pe-checklists`): one checklist per PE across all its units.
+- **Domain rules** (`lib/domain/assignments.ts`, tested): status from dates, overlap, §15.9 full-period coverage with two-tier error (reused in Step 5), version planning.
+- Mock: seeded checklist assignments for every vendor-unit pair and Veero's PE checklist (DB v4).
+- **Tests: 50 passing.**
+
+**Next: Step 5**: Audit run creation wizard (vendor or PE audit, activity period, windows, §13/§15.9 validation, auto LIFETIME/ONE_TIME items with carry-forward, PERIODIC bulk-add).

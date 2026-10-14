@@ -8,6 +8,7 @@ import type {
   AuditColumns,
   Cadence,
   ChecklistItem,
+  PEChecklistAssignment,
   PEChecklistItem,
   PEUnit,
   PrincipalEmployer,
@@ -15,6 +16,7 @@ import type {
   State,
   User,
   Vendor,
+  VendorChecklistAssignment,
   VendorUnitAssignment,
 } from "@/types/domain";
 
@@ -260,3 +262,28 @@ export const peChecklistItems: PEChecklistItem[] = peChecklistSeed.map(([act, ca
   isActive: true,
   ...audit(),
 }));
+
+/** §7A Lock 8 — onboarding default: full active master applicable to the unit's state (+ NATIONAL), pre-ticked. */
+export const vendorChecklistAssignments: VendorChecklistAssignment[] = vendorUnitAssignments.map((vua) => {
+  const unit = peUnits.find((u) => u.id === vua.peUnitId)!;
+  return {
+    id: `vca-${vua.id.slice(4)}`,
+    vendorId: vua.vendorId,
+    peUnitId: vua.peUnitId,
+    effectiveFrom: "2026-04-01",
+    effectiveTo: null,
+    checklistItemIds: checklistItems.filter((i) => i.stateId === null || i.stateId === unit.stateId).map((i) => i.id),
+    ...audit(),
+  };
+});
+
+export const peChecklistAssignments: PEChecklistAssignment[] = [
+  {
+    id: "pca-veero-1",
+    peId: "pe-veero",
+    effectiveFrom: "2026-04-01",
+    effectiveTo: null,
+    peChecklistItemIds: peChecklistItems.map((i) => i.id),
+    ...audit(),
+  },
+];

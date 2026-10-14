@@ -6,7 +6,7 @@
 import * as seed from "./seed";
 
 const STORAGE_KEY = "ams.mock-db";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 function createSeedDb() {
   return {
@@ -19,6 +19,8 @@ function createSeedDb() {
     vendorUnitAssignments: structuredClone(seed.vendorUnitAssignments),
     checklistItems: structuredClone(seed.checklistItems),
     peChecklistItems: structuredClone(seed.peChecklistItems),
+    vendorChecklistAssignments: structuredClone(seed.vendorChecklistAssignments),
+    peChecklistAssignments: structuredClone(seed.peChecklistAssignments),
     users: structuredClone(seed.users),
     /** Plain-text only because this is a mock; the real backend stores hashes. */
     passwords: Object.fromEntries(seed.users.map((u) => [u.id, seed.MOCK_PASSWORD])) as Record<string, string>,

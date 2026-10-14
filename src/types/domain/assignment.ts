@@ -30,3 +30,18 @@ export interface PEChecklistAssignment extends AuditColumns, EffectivePeriod {
   peId: Id;
   peChecklistItemIds: Id[];
 }
+
+/* ---------- API views ---------- */
+
+/** Derived from dates: FUTURE (not started), CURRENT, ENDED. */
+export type AssignmentStatus = "FUTURE" | "CURRENT" | "ENDED";
+
+export interface VendorUnitAssignmentView extends VendorUnitAssignment {
+  vendorName: string;
+  unitCode: string;
+  unitName: string;
+  unitStateId: Id;
+  peId: Id;
+  peName: string;
+  status: AssignmentStatus;
+}

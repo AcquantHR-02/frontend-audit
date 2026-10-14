@@ -17,6 +17,8 @@ export type ChecklistListParams = PageRequest & {
   /** a state id, or "NATIONAL" */
   stateId?: string;
   cadence?: Cadence;
+  /** Comma-separated state ids: returns items for these states plus NATIONAL items. */
+  forStates?: string;
 };
 
 export const checklistItemsApi = baseApi.injectEndpoints({
