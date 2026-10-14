@@ -15,6 +15,14 @@ export interface User extends AuditColumns {
   isActive: boolean;
   /** Forces password change on next login (first admin bootstrap, admin resets). */
   mustChangePassword: boolean;
+  /** Locked after repeated failed logins; only AUDITOR_ADMIN can unlock. */
+  isLocked: boolean;
+}
+
+/** User row as listed in administration, with the scoped party's name resolved. */
+export interface UserView extends User {
+  /** Vendor name (VENDOR_USER) or PE name (PE_USER); null for auditor roles. */
+  scopeName: string | null;
 }
 
 /** The narrow shape kept in the client auth state. */

@@ -17,6 +17,8 @@ export interface ChangePasswordRequest {
 }
 
 export const authApi = baseApi.injectEndpoints({
+  // Fast Refresh re-evaluates this module in dev; allow re-registering the same endpoints.
+  overrideExisting: process.env.NODE_ENV === "development",
   endpoints: (build) => ({
     login: build.mutation<AuthResponse, LoginRequest>({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),

@@ -32,6 +32,7 @@ export const Permission = {
 
   MASTERS_VIEW: "masters:view",
   MASTERS_MANAGE: "masters:manage", // §18 — admin only
+  UNITS_CLOSE: "units:close", // §13 — close/reopen units: "auditor only" = either auditor role
 
   USERS_MANAGE: "users:manage", // admin only
   AUDIT_TRAIL_VIEW: "auditTrail:view",
@@ -55,6 +56,7 @@ const auditorUser: Permission[] = [
   P.REPORTS_VIEW,
   P.ASSIGNMENTS_MANAGE,
   P.MASTERS_VIEW,
+  P.UNITS_CLOSE,
   P.RETENTION_VIEW,
 ];
 

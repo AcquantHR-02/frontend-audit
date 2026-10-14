@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Forbidden } from "@/components/shared/forbidden";
@@ -41,7 +41,8 @@ function ShellContent({ children }: { children: ReactNode }) {
       <SidebarInset className="min-w-0">
         <AppHeader user={user} onSignOut={signOut} />
         <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-6 p-4 sm:p-6">
-          {allowed ? children : <Forbidden />}
+          {/* Pages read URL state (search params) → Suspense boundary required by Cache Components. */}
+          <Suspense>{allowed ? children : <Forbidden />}</Suspense>
         </div>
       </SidebarInset>
     </SidebarProvider>

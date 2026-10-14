@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { ModulePlaceholder } from "@/components/shared/module-placeholder";
+import { VendorsPage } from "@/features/masters";
 
 export const metadata: Metadata = { title: "Vendors" };
 
-export default function MastersVendorsPage() {
-  return (
-    <ModulePlaceholder
-      title="Vendors"
-      description="Contractors and vendors supplying workers to Principal Employers."
-    />
-  );
+export default function MastersVendorsRoute() {
+  return <VendorsPage />;
 }

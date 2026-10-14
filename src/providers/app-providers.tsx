@@ -1,5 +1,6 @@
 "use client";
 
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +15,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <MswProvider>
         <StoreProvider>
           <TooltipProvider delayDuration={200}>
-            {children}
+            <NuqsAdapter>{children}</NuqsAdapter>
             <Toaster richColors closeButton position="top-right" />
           </TooltipProvider>
         </StoreProvider>

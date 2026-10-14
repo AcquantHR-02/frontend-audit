@@ -8,6 +8,7 @@ import type {
   AuditColumns,
   Cadence,
   ChecklistItem,
+  PEChecklistItem,
   PEUnit,
   PrincipalEmployer,
   Role,
@@ -31,10 +32,10 @@ const audit = (): AuditColumns => ({
 export const MOCK_PASSWORD = "Password@123";
 
 export const states: State[] = [
-  { id: "st-ka", code: "KA", name: "Karnataka" },
-  { id: "st-tn", code: "TN", name: "Tamil Nadu" },
-  { id: "st-mh", code: "MH", name: "Maharashtra" },
-  { id: "st-tg", code: "TG", name: "Telangana" },
+  { id: "st-ka", code: "KA", name: "Karnataka", ...audit() },
+  { id: "st-tn", code: "TN", name: "Tamil Nadu", ...audit() },
+  { id: "st-mh", code: "MH", name: "Maharashtra", ...audit() },
+  { id: "st-tg", code: "TG", name: "Telangana", ...audit() },
 ];
 
 export const principalEmployers: PrincipalEmployer[] = [
@@ -218,6 +219,7 @@ const user = (
   peId: scope.peId ?? null,
   isActive: true,
   mustChangePassword: false,
+  isLocked: false,
   ...audit(),
 });
 
@@ -230,3 +232,31 @@ export const users: User[] = [
   // Demonstrates the forced password change on first login (§18).
   { ...user("usr-new", "Neha Joshi", "newuser@acquanthr.test", "AUDITOR_USER"), mustChangePassword: true },
 ];
+
+/** §19 — PE-side master: the PE's own statutory obligations (mostly company-wide, so mostly NATIONAL). */
+const peChecklistSeed: [act: string, cadence: Cadence, description: string, national?: boolean][] = [
+  ["clra", O, "Principal Employer registration certificate under CLRA (Form II)"],
+  ["clra", P, "Register of contractors maintained (Form XII)"],
+  ["clra", P, "Annual return by Principal Employer (Form XXV)"],
+  ["fact", O, "Factory licence valid for the unit"],
+  ["fact", P, "Half-yearly / annual returns under Factories Act"],
+  ["fact", P, "Accident register and notices maintained"],
+  ["esic", L, "ESIC employer registration", true],
+  ["esic", P, "Verification of contractors' ESIC remittances", true],
+  ["epf", L, "EPF establishment registration", true],
+  ["epf", P, "Verification of contractors' EPF remittances", true],
+  ["kase", O, "Shops & Establishments registration (offices)"],
+  ["ptka", L, "Professional Tax employer registration"],
+  ["bonus", P, "Annual return under Payment of Bonus Act (Form D)", true],
+  ["mat", P, "Maternity benefit returns where applicable", true],
+];
+
+export const peChecklistItems: PEChecklistItem[] = peChecklistSeed.map(([act, cadence, description, national], i) => ({
+  id: `pci-${String(i + 1).padStart(3, "0")}`,
+  actId: `act-${act}`,
+  stateId: national ? null : "st-ka",
+  description,
+  cadence,
+  isActive: true,
+  ...audit(),
+}));

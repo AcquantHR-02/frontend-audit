@@ -2,7 +2,7 @@ import type { AuditColumns, Id, IsoDateTime } from "./common";
 import type { Cadence } from "./enums";
 
 /** §12.1 — Indian state; scopes checklist masters and PE units. */
-export interface State {
+export interface State extends AuditColumns {
   id: Id;
   code: string; // e.g. "KA"
   name: string; // e.g. "Karnataka"
@@ -58,3 +58,32 @@ export interface ChecklistItem extends AuditColumns {
 
 /** §19 — PE-side checklist master. Same shape, separate table. */
 export type PEChecklistItem = ChecklistItem;
+
+/* ---------- List/read views returned by the API (entity + derived, read-only fields) ---------- */
+
+export interface ActSummary extends Act {
+  checklistItemCount: number;
+  peChecklistItemCount: number;
+}
+
+export interface PrincipalEmployerSummary extends PrincipalEmployer {
+  unitCount: number;
+  openUnitCount: number;
+}
+
+export interface VendorSummary extends Vendor {
+  /** Units with a currently effective VendorUnitAssignment. */
+  activeUnitCount: number;
+}
+
+export interface ChecklistItemView extends ChecklistItem {
+  actShortName: string;
+  /** null = NATIONAL */
+  stateCode: string | null;
+}
+
+export interface PEUnitView extends PEUnit {
+  stateCode: string;
+  /** Vendors currently assigned to this unit. */
+  activeVendorCount: number;
+}

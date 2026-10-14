@@ -25,5 +25,6 @@ export type AppStore = ReturnType<typeof makeStore>;
 export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = AppStore["dispatch"];
 
-export { baseApi } from "./base-api";
+export { baseApi, type TagType } from "./base-api";
 export * from "./slices/session.slice";
+export * from "./tags";

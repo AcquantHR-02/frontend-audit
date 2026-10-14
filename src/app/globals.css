@@ -33,6 +33,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand-cyan: var(--brand-cyan);
 
   /* Semantic status colours: `text-success`, `bg-success-subtle`, `border-success-border` … */
   --color-success: var(--success);
@@ -88,18 +89,19 @@
   --popover: oklch(1 0 0);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(0.42 0.15 262); /* #1E46A0 deep blue */
+  --primary: #314f8b; /* Acquant HR navy (logo) */
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.962 0.008 255);
   --secondary-foreground: oklch(0.3 0.05 262);
   --muted: oklch(0.962 0.008 255);
   --muted-foreground: oklch(0.52 0.03 258);
-  --accent: oklch(0.948 0.024 258); /* blue tint for hover/selected */
-  --accent-foreground: oklch(0.36 0.13 262);
+  --accent: oklch(0.95 0.022 258); /* navy tint for hover/selected */
+  --accent-foreground: #263f73;
   --destructive: oklch(0.53 0.2 27);
   --border: oklch(0.912 0.012 255);
   --input: oklch(0.875 0.016 255);
-  --ring: oklch(0.56 0.16 262);
+  --ring: #139ac9;
+  --brand-cyan: #139ac9; /* Acquant HR cyan (logo) */
 
   --success: oklch(0.5 0.12 150);
   --success-subtle: oklch(0.96 0.03 150);
@@ -120,9 +122,9 @@
   --violet-subtle: oklch(0.96 0.02 290);
   --violet-border: oklch(0.88 0.05 290);
 
-  /* Blue-led chart scale */
-  --chart-1: oklch(0.42 0.15 262);
-  --chart-2: oklch(0.6 0.13 245);
+  /* Brand-led chart scale */
+  --chart-1: #314f8b;
+  --chart-2: #139ac9;
   --chart-3: oklch(0.55 0.12 150);
   --chart-4: oklch(0.72 0.13 75);
   --chart-5: oklch(0.58 0.19 27);
@@ -131,12 +133,12 @@
   --sidebar: oklch(0.24 0.07 262);
   --sidebar-gradient: linear-gradient(180deg, #081a3d 0%, #0c2656 55%, #123478 100%);
   --sidebar-foreground: oklch(0.86 0.025 255);
-  --sidebar-primary: oklch(0.72 0.12 245); /* active indicator */
+  --sidebar-primary: #2bb3e3; /* active indicator — brand cyan, lifted for navy */
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(1 0 0 / 9%);
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.12 245);
+  --sidebar-ring: #2bb3e3;
 }
 
 .dark {
@@ -158,7 +160,8 @@
   --destructive: oklch(0.66 0.19 25);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.66 0.14 255);
+  --ring: #2bb3e3;
+  --brand-cyan: #2bb3e3;
 
   --success: oklch(0.75 0.13 150);
   --success-subtle: oklch(0.3 0.05 150 / 45%);
@@ -188,12 +191,12 @@
   --sidebar: oklch(0.15 0.04 262);
   --sidebar-gradient: linear-gradient(180deg, #050f26 0%, #081a3d 60%, #0b2350 100%);
   --sidebar-foreground: oklch(0.84 0.02 255);
-  --sidebar-primary: oklch(0.72 0.12 245);
+  --sidebar-primary: #2bb3e3;
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(1 0 0 / 8%);
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.72 0.12 245);
+  --sidebar-ring: #2bb3e3;
 }
 
 @layer base {

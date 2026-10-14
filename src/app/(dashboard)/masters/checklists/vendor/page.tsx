@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { ModulePlaceholder } from "@/components/shared/module-placeholder";
+import { ChecklistMasterPage } from "@/features/masters";
 
 export const metadata: Metadata = { title: "Vendor checklist master" };
 
-export default function MastersChecklistsVendorPage() {
-  return (
-    <ModulePlaceholder
-      title="Vendor checklist master"
-      description="State-scoped and national checklist items used in vendor audits."
-    />
-  );
+export default function MastersChecklistsVendorRoute() {
+  return <ChecklistMasterPage kind="vendor" />;
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ModulePlaceholder } from "@/components/shared/module-placeholder";
+import { ActsPage } from "@/features/masters";
 
 export const metadata: Metadata = { title: "Acts" };
 
-export default function MastersActsPage() {
-  return <ModulePlaceholder title="Acts" description="Statutes that checklist items belong to." />;
+export default function MastersActsRoute() {
+  return <ActsPage />;
 }
