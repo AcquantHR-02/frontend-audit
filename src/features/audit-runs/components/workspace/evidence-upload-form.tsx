@@ -1,22 +1,17 @@
 "use client";
 
-import { FileIcon, Loader2Icon, UploadCloudIcon, XIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
-import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+import { FileDropzone } from "@/components/shared/file-dropzone";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { MAX_FILES, validateEvidence } from "@/lib/domain";
-import { cn } from "@/lib/utils";
 import type { ApiError } from "@/types/api";
 import { useUploadEvidenceMutation } from "../../api/audit-runs.api";
-
-const MAX_SIZE = 10 * 1024 * 1024;
-const formatSize = (b: number) =>
-  b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(b / 1024)} KB`;
 
 /** Path 1 (party: files + remarks, optional NA proposal) or Path 2 (auditor: optional files only). */
 export function EvidenceUploadForm({
@@ -35,19 +30,6 @@ export function EvidenceUploadForm({
   const [remarks, setRemarks] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [upload, { isLoading }] = useUploadEvidenceMutation();
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    maxSize: MAX_SIZE,
-    accept: {
-      "application/pdf": [".pdf"],
-      "image/*": [".png", ".jpg", ".jpeg"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-    },
-    onDrop: (accepted, rejected) => {
-      setError(rejected.length ? "Some files were skipped: use PDF, image or Excel files up to 10 MB." : null);
-      setFiles((current) => [...current, ...accepted].slice(0, MAX_FILES));
-    },
-  });
 
   async function submit() {
     const problem = validateEvidence({ uploader, fileCount: files.length, naProposed, partyRemarks: remarks });
@@ -86,44 +68,13 @@ export function EvidenceUploadForm({
         </div>
       )}
 
-      <div
-        {...getRootProps()}
-        className={cn(
-          "flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed p-5 text-center transition-colors hover:bg-accent/40",
-          isDragActive && "border-primary bg-accent",
-          files.length >= MAX_FILES && "pointer-events-none opacity-50",
-        )}
-      >
-        <input {...getInputProps()} aria-label="Upload files" />
-        <UploadCloudIcon className="size-6 text-muted-foreground" aria-hidden />
-        <p className="text-[13px] font-medium">
-          {isDragActive ? "Drop files here" : "Drag files here or click to browse"}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          PDF, image or Excel · up to {MAX_FILES} files · 10 MB each
-          {uploader === "PARTY" && !naProposed && " · at least 1 required"}
-        </p>
-      </div>
-
-      {files.length > 0 && (
-        <ul className="space-y-1.5">
-          {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[13px]">
-              <FileIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="min-w-0 flex-1 truncate">{f.name}</span>
-              <span className="text-xs text-muted-foreground">{formatSize(f.size)}</span>
-              <button
-                type="button"
-                aria-label={`Remove ${f.name}`}
-                onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <XIcon className="size-3.5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <FileDropzone
+        files={files}
+        onChange={setFiles}
+        maxFiles={MAX_FILES}
+        hint={uploader === "PARTY" && !naProposed ? "at least 1 required" : undefined}
+        onReject={setError}
+      />
 
       {uploader === "PARTY" && (
         <Field>

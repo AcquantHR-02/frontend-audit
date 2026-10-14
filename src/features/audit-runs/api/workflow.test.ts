@@ -2,6 +2,7 @@
 import { setupServer } from "msw/node";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { authApi } from "@/features/auth";
+import { findingsApi } from "@/features/findings";
 import { addDays } from "@/lib/domain";
 import { handlers } from "@/mocks/handlers";
 import { makeStore } from "@/store";
@@ -217,5 +218,25 @@ describe("audit workflow: Window 1 → review → Window 2 → publish (§4, §6
           .unwrap(),
       ),
     ).toMatchObject({ status: 403 });
+
+    // §14 — finding lifecycle: party remediates while OPEN, auditor resolves, party locked out.
+    const findings = await vendor.dispatch(findingsApi.endpoints.getFindings.initiate({ runId: run.id })).unwrap();
+    expect(findings.totalElements).toBe(1);
+    const findingId = findings.content[0].id;
+    const remediation = new FormData();
+    remediation.append("files", new File(["%PDF"], "challan.pdf", { type: "application/pdf" }));
+    remediation.append("remarks", "Paid and filed");
+    await vendor.dispatch(findingsApi.endpoints.addRemediation.initiate({ id: findingId, form: remediation })).unwrap();
+    await auditor
+      .dispatch(findingsApi.endpoints.updateFinding.initiate({ id: findingId, status: "RESOLVED" }))
+      .unwrap();
+    const again = new FormData();
+    again.append("files", new File(["%PDF"], "more.pdf", { type: "application/pdf" }));
+    again.append("remarks", "more");
+    expect(
+      await failure(
+        vendor.dispatch(findingsApi.endpoints.addRemediation.initiate({ id: findingId, form: again })).unwrap(),
+      ),
+    ).toMatchObject({ code: "FINDING_RESOLVED" });
   });
 });

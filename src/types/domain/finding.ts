@@ -1,5 +1,5 @@
 import type { AuditColumns, Id, IsoDateTime } from "./common";
-import type { FindingStatus } from "./enums";
+import type { AuditType, FindingStatus } from "./enums";
 import type { StoredFile } from "./evidence";
 
 /**
@@ -22,4 +22,26 @@ export interface FindingAttachment {
   uploadedBy: Id;
   uploadedByName: string;
   uploadedAt: IsoDateTime;
+}
+
+/** Finding with its identity resolved via finding → AIR → run (never stored on the finding, §15.7). */
+export interface FindingView extends Finding {
+  runId: Id;
+  runCode: string;
+  auditType: AuditType;
+  partyName: string;
+  peName: string;
+  unitCode: string;
+  unitName: string;
+  actName: string;
+  requirement: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  auditRemarks: string | null;
+  attachmentCount: number;
+  lastRemediationAt: IsoDateTime | null;
+}
+
+export interface FindingDetail extends FindingView {
+  attachments: FindingAttachment[];
 }

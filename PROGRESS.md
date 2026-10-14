@@ -98,7 +98,7 @@ audit-frontend/
 | 4   | Assignments: vendor↔unit, vendor checklists, PE checklists (versioned, Apply Master)                              | ✅ Done    |
 | 5   | Audit run creation wizard (validations, auto-materialise, PERIODIC bulk-add)                                      | ✅ Done    |
 | 6   | Run workspace: party upload + NA proposal, auditor review (3 paths), windows, Window 2, Publish                   | ✅ Done    |
-| 7   | Findings: list, detail, remediation uploads, resolve                                                              | ⏳ Pending |
+| 7   | Findings: list, detail, remediation uploads, resolve                                                              | ✅ Done    |
 | 8   | Dashboards, score reports, Excel exports, audit trail, retention notices                                          | ⏳ Pending |
 | 9   | Responsive polish pass across the whole app (mobile / tablet / desktop) — user request                            | ⏳ Pending |
 
@@ -137,6 +137,7 @@ audit-frontend/
 - Audit run endpoints: `POST /audit-runs/checklist-preview` (scope → items + carry-forward flags, or §15.9/§13 error codes `ASSIGNMENT_NOT_FOUND`, `ASSIGNMENT_CHANGED_IN_PERIOD`, `UNIT_CLOSED`, `VENDOR_NOT_ASSIGNED`), `POST /audit-runs` (dates + `periodicItems[{checklistItemId, periods[]}]`; `RUN_OVERLAP` 409), `GET /audit-runs?auditType&phase`, `GET /audit-runs/{id}`, `GET /audit-runs/{id}/items`. Runs carry a human code `AR-YYYY-NNNN` (new field, please add).
 - Workspace endpoints: `GET/POST /airs/{id}/evidence` (multipart `files[]`, `partyRemarks`, `naProposedByParty`), `PATCH /airs/{id}/review {complianceStatus, auditRemarks, validTo}`, `POST /audit-runs/{id}/start-review`, `/end-review {window2Start?, window2End?}` (409 `WINDOW2_REQUIRED`), `/close-window2`, `GET /audit-runs/{id}/publish-check`, `POST /audit-runs/{id}/publish` (opens findings). Phase is derived from dates plus `reviewStart` / `finalReviewStart` (early window closure).
 - File storage: mock keeps files only for the browser session; backend should return signed download URLs.
+- Findings endpoints: `GET /findings?status&auditType&runId`, `GET /findings/summary`, `GET /findings/{id}` (with attachments), `POST /findings/{id}/attachments` (multipart 1–3 files + remarks; party only while OPEN → 409 `FINDING_RESOLVED`), `PATCH /findings/{id} {status?, remarks?}` (auditors).
 - List rows include derived counts (see `*Summary` / `*View` types in `src/types/domain/master.ts`).
 - Temporary passwords: mock returns them to the admin; production should email them instead.
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
@@ -259,4 +260,11 @@ npm run lint && npm run typecheck
 - **Domain** (`lib/domain/review.ts`, tested): upload windows, file rules, validTo rule, end-of-review evaluation, publish check.
 - **Tests: 68 passing**, incl. a full end-to-end workflow test. API tests run in the Node test environment (jsdom's FormData hangs with Node fetch); mock latency is skipped in tests.
 
-**Next: Step 7**: Findings: list (open/resolved, per party), detail with remediation uploads (1–3 files + remarks), auditor edits and resolve.
+### 2026-10-14 — Step 7 ✅ Findings
+
+- **Findings list** (`/findings`): KPIs (open, remediation submitted, resolved), filters (status, audit type), search; rows show requirement, Act, period, party, unit, run code, status (+ "Remediation submitted").
+- **Finding detail** (`/findings/[id]`): remediation history with files, details card (run link, Act, period, opened, audit remarks), remediation upload (1–3 files + remarks; party only while OPEN; auditors any time), auditor **Mark resolved / Reopen** (both ways, §14) and private notes. Visibility per §18 (PE users read vendor findings at their units, remediate only their own PE audit findings).
+- Shared `FileDropzone` now used by both evidence and remediation uploads.
+- **Tests: 68 passing** (end-to-end workflow now covers the finding lifecycle).
+
+**Next: Step 8**: Dashboards (per role), reports (score roll-ups, trends), Excel exports, audit trail, retention notices.
