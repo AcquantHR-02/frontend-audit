@@ -14,6 +14,7 @@ import {
   ListChecksIcon,
   LockIcon,
   SearchIcon,
+  TrophyIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
@@ -38,6 +39,7 @@ import {
   complianceMeta,
   formatScore,
   runPhaseMeta,
+  scorecardHref,
   submissionMeta,
 } from "@/lib/domain";
 import { cn, formatDate, formatDateRange } from "@/lib/utils";
@@ -267,6 +269,11 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
         actions={
           items && (
             <>
+              <Button asChild variant="outline">
+                <Link href={scorecardHref(run.auditType, run.vendorId ?? run.peId)}>
+                  <TrophyIcon /> Scorecard
+                </Link>
+              </Button>
               <Button variant="outline" onClick={() => exportRunReport(run, items)}>
                 <FileSpreadsheetIcon /> Export Excel
               </Button>

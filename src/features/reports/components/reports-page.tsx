@@ -9,7 +9,9 @@ import {
   FileSpreadsheetIcon,
   GaugeIcon,
   Loader2Icon,
+  TrophyIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -27,7 +29,7 @@ import { usePrincipalEmployerOptions } from "@/features/masters";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useUrlFilter } from "@/hooks/use-url-filter";
 import { isAuditor } from "@/lib/auth";
-import { auditTypeMeta, formatScore } from "@/lib/domain";
+import { auditTypeMeta, formatScore, scorecardHref } from "@/lib/domain";
 import { cn, formatCount, formatDate, formatDateRange } from "@/lib/utils";
 import type { AuditType, ScoreCounts } from "@/types/domain";
 import { useGetScoreRollupQuery } from "../api/reports.api";
@@ -67,6 +69,11 @@ export function ReportsPage() {
     from: from || undefined,
     to: to || undefined,
   });
+  const myScorecard = user?.vendorId
+    ? scorecardHref("VENDOR", user.vendorId)
+    : user?.peId
+      ? scorecardHref("PE", user.peId)
+      : null;
   const periodLabel =
     from || to
       ? formatDateRange(from || "2000-01-01", to || new Date().toISOString().slice(0, 10))
@@ -99,9 +106,18 @@ export function ReportsPage() {
         title="Reports"
         description="Compliance score roll-up of published runs: audited party → unit. Score = (Complied + NA) ÷ items, rounded once."
         actions={
-          <Button onClick={exportExcel} disabled={!data?.rows.length || exporting}>
-            {exporting ? <Loader2Icon className="animate-spin" /> : <FileSpreadsheetIcon />} Export Excel
-          </Button>
+          <>
+            {myScorecard && (
+              <Button asChild variant="outline">
+                <Link href={myScorecard}>
+                  <TrophyIcon /> My scorecard
+                </Link>
+              </Button>
+            )}
+            <Button onClick={exportExcel} disabled={!data?.rows.length || exporting}>
+              {exporting ? <Loader2Icon className="animate-spin" /> : <FileSpreadsheetIcon />} Export Excel
+            </Button>
+          </>
         }
       />
 
@@ -198,7 +214,14 @@ export function ReportsPage() {
                             className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-90")}
                             aria-hidden
                           />
-                          {row.partyName}
+                          <Link
+                            href={scorecardHref(row.auditType, row.id.split(":")[1])}
+                            onClick={(e) => e.stopPropagation()}
+                            className="underline-offset-4 hover:text-primary hover:underline"
+                            title="Open scorecard"
+                          >
+                            {row.partyName}
+                          </Link>
                           <span className="rounded border px-1 font-mono text-[10px] font-normal text-muted-foreground">
                             {row.auditType}
                           </span>

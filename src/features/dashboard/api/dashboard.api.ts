@@ -1,5 +1,5 @@
 import { baseApi } from "@/store";
-import type { AuditRunView, RunPhase, ScoreCounts } from "@/types/domain";
+import type { AuditRunView, AuditType, RunPhase, ScoreCounts } from "@/types/domain";
 
 export interface DashboardDeadline {
   runId: string;
@@ -20,7 +20,7 @@ export interface DashboardData {
   itemsToUpload: number;
   publishedThisFy: number;
   publishedScore: ScoreCounts;
-  partyScores: { name: string; score: ScoreCounts }[];
+  partyScores: { id: string; auditType: AuditType; name: string; score: ScoreCounts }[];
   trend: { month: string; score: ScoreCounts }[];
   recentRuns: AuditRunView[];
   /** Window dates in the next 30 days, soonest first (max 6). */

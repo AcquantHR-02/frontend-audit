@@ -17,19 +17,18 @@ import {
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { BarList, ComplianceRing, PhaseTiles, ScoreTrend } from "@/components/shared/charts";
 import { KpiCard } from "@/components/shared/kpi-card";
+import { Panel } from "@/components/shared/panel";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCan, useCurrentUser } from "@/hooks/use-current-user";
 import { isAuditor, Permission } from "@/lib/auth";
-import { formatScore, roleMeta, runPhaseMeta, scoreInTenths } from "@/lib/domain";
+import { formatScore, roleMeta, runPhaseMeta, scorecardHref, scoreInTenths } from "@/lib/domain";
 import { cn, formatCount, formatDateRange } from "@/lib/utils";
 import { useGetDashboardQuery, type DashboardData } from "../api/dashboard.api";
-import { BarList, ComplianceRing, PhaseTiles, ScoreTrend } from "./charts";
 import { DeadlineList, FindingsAging, NcByAct } from "./insights";
 
 const descriptions = {
@@ -45,18 +44,6 @@ function greeting(date = new Date()) {
 }
 
 const plural = (n: number, word: string) => `${formatCount(n)} ${word}${n === 1 ? "" : "s"}`;
-
-function Panel({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="border-b py-3">
-        <CardTitle className="text-sm">{title}</CardTitle>
-        {action && <CardAction>{action}</CardAction>}
-      </CardHeader>
-      <CardContent className="py-4">{children}</CardContent>
-    </Card>
-  );
-}
 
 interface Task {
   key: string;
@@ -410,6 +397,7 @@ function OverviewContent({
                         label: p.name,
                         value: (scoreInTenths(p.score) ?? 0) / 10,
                         display: formatScore(p.score),
+                        href: scorecardHref(p.auditType, p.id),
                       }))
                   : data.trend.map((t) => ({
                       label: format(parseISO(`${t.month}-01`), "MMM yyyy"),

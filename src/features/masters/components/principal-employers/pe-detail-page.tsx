@@ -10,6 +10,7 @@ import {
   DoorOpenIcon,
   MapPinIcon,
   PencilIcon,
+  TrophyIcon,
   PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -35,6 +36,7 @@ import { useCan } from "@/hooks/use-current-user";
 import { useTableUrlState } from "@/hooks/use-table-url-state";
 import { useUrlFilter } from "@/hooks/use-url-filter";
 import { Permission } from "@/lib/auth";
+import { scorecardHref } from "@/lib/domain";
 import { formatDate } from "@/lib/utils";
 import type { ApiError } from "@/types/api";
 import type { PEUnitView } from "@/types/domain";
@@ -177,11 +179,18 @@ export function PrincipalEmployerDetailPage({ peId }: { peId: string }) {
           badge={<ActiveBadge active={pe.isActive} />}
           description={pe.legalName}
           actions={
-            canManage && (
-              <Button variant="outline" onClick={() => setPeFormOpen(true)}>
-                <PencilIcon /> Edit details
+            <>
+              <Button asChild variant="outline">
+                <Link href={scorecardHref("PE", pe.id)}>
+                  <TrophyIcon /> Scorecard
+                </Link>
               </Button>
-            )
+              {canManage && (
+                <Button variant="outline" onClick={() => setPeFormOpen(true)}>
+                  <PencilIcon /> Edit details
+                </Button>
+              )}
+            </>
           }
         />
       )}

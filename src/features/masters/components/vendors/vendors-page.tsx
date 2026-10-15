@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { PencilIcon, PlusIcon, PowerIcon, TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { RowActions } from "@/components/shared/row-actions";
+import { scorecardHref } from "@/lib/domain";
 import { StatusChangeDialog } from "@/components/shared/status-change-dialog";
 import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/use-current-user";
@@ -47,7 +49,15 @@ export function VendorsPage() {
     {
       accessorKey: "name",
       header: ({ column }) => <SortableHeader column={column} title="Vendor" />,
-      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      cell: ({ row }) => (
+        <Link
+          href={scorecardHref("VENDOR", row.original.id)}
+          className="font-medium underline-offset-4 hover:text-primary hover:underline"
+          title="Open scorecard"
+        >
+          {row.original.name}
+        </Link>
+      ),
     },
     {
       accessorKey: "activeUnitCount",

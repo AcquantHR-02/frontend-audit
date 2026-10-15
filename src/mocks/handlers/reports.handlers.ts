@@ -3,7 +3,7 @@ import { Permission } from "@/lib/auth";
 import type { AuditRunView, RunPhase, ScoreCounts } from "@/types/domain";
 import { requireUser } from "../crud";
 import { db } from "../db";
-import { apiUrl, networkDelay, paginate, todayIso } from "../utils";
+import { apiUrl, errorResponse, networkDelay, paginate, todayIso } from "../utils";
 import { toRunView, visibleTo } from "./audit-runs.handlers";
 
 type WindowEvent = "WINDOW_1_OPENS" | "WINDOW_1_CLOSES" | "WINDOW_2_CLOSES";
@@ -35,10 +35,10 @@ export const reportsHandlers = [
     const published = runs.filter((r) => r.phase === "PUBLISHED");
     const fy = fyStart(new Date());
 
-    const partyScores = new Map<string, { name: string; score: ScoreCounts }>();
+    const partyScores = new Map<string, { id: string; auditType: string; name: string; score: ScoreCounts }>();
     for (const r of published) {
       const key = r.vendorId ?? r.peId ?? r.id;
-      const entry = partyScores.get(key) ?? { name: r.partyName, score: empty() };
+      const entry = partyScores.get(key) ?? { id: key, auditType: r.auditType, name: r.partyName, score: empty() };
       entry.score = add(entry.score, r.score);
       partyScores.set(key, entry);
     }
@@ -169,6 +169,127 @@ export const reportsHandlers = [
       rows,
       total: rows.reduce((acc, r) => add(acc, r.score), empty()),
       runCount: runs.length,
+    });
+  }),
+
+  /**
+   * Party scorecard: one vendor's (or one PE's own) audit history: score trend, units, repeat
+   * non-compliance and open findings. Scoped by the same visibility rules as runs.
+   */
+  http.get(apiUrl("/reports/scorecard"), async ({ request }) => {
+    await networkDelay();
+    const user = requireUser(request, Permission.REPORTS_VIEW);
+    if (user instanceof Response) return user;
+    const url = new URL(request.url);
+    const auditType = url.searchParams.get("auditType");
+    const partyId = url.searchParams.get("partyId");
+    const vendor = auditType === "VENDOR" ? db.vendors.find((v) => v.id === partyId) : undefined;
+    const pe = auditType === "PE" ? db.principalEmployers.find((p) => p.id === partyId) : undefined;
+    const party = vendor ?? pe;
+    // A party user sees only their own scorecard (PE users also see vendors at their units).
+    const allowed =
+      user.role === "VENDOR_USER"
+        ? auditType === "VENDOR" && user.vendorId === partyId
+        : user.role === "PE_USER"
+          ? auditType === "VENDOR" || user.peId === partyId
+          : true;
+    if (!party || !allowed) return errorResponse(404, "Scorecard not found.", { code: "NOT_FOUND" });
+
+    const runs = db.auditRuns
+      .filter((r) => r.auditType === auditType && (auditType === "VENDOR" ? r.vendorId : r.peId) === partyId)
+      .filter((r) => visibleTo(user, r))
+      .map(toRunView)
+      .sort((a, b) => b.activityPeriodEnd.localeCompare(a.activityPeriodEnd) || b.code.localeCompare(a.code));
+    const published = runs.filter((r) => r.phase === "PUBLISHED");
+    const publishedById = new Map(published.map((r) => [r.id, r]));
+    const today = todayIso();
+    const age = (iso: string) => Math.round((Date.parse(today) - Date.parse(iso.slice(0, 10))) / 86_400_000);
+    const runScore = (r: AuditRunView | undefined) =>
+      r ? { runId: r.id, code: r.code, periodEnd: r.activityPeriodEnd, score: r.score } : null;
+
+    const months = new Map<string, ScoreCounts>();
+    for (const r of published) {
+      const month = r.activityPeriodEnd.slice(0, 7);
+      months.set(month, add(months.get(month) ?? empty(), r.score));
+    }
+
+    const units = new Map<string, AuditRunView[]>();
+    for (const r of runs) units.set(r.peUnitId, [...(units.get(r.peUnitId) ?? []), r]);
+
+    // Not-complied items in published runs: by Act, and requirements that keep failing.
+    const byAct = new Map<string, number>();
+    const repeats = new Map<string, { requirement: string; act: string; runIds: Set<string>; lastPeriodEnd: string }>();
+    for (const a of db.airs) {
+      const run = publishedById.get(a.runId);
+      if (!run || a.complianceStatus !== "NOT_COMPLIED") continue;
+      byAct.set(a.actNameSnapshot, (byAct.get(a.actNameSnapshot) ?? 0) + 1);
+      const key = a.checklistItemId ?? a.peChecklistItemId ?? a.descriptionSnapshot;
+      const entry = repeats.get(key) ?? {
+        requirement: a.descriptionSnapshot,
+        act: a.actNameSnapshot,
+        runIds: new Set<string>(),
+        lastPeriodEnd: "",
+      };
+      entry.runIds.add(a.runId);
+      if (run.activityPeriodEnd > entry.lastPeriodEnd) entry.lastPeriodEnd = run.activityPeriodEnd;
+      repeats.set(key, entry);
+    }
+
+    const findings = db.findings.flatMap((f) => {
+      const air = db.airs.find((a) => a.id === f.airId);
+      const run = air && publishedById.get(air.runId);
+      return air && run ? [{ f, air, run }] : [];
+    });
+    const open = findings
+      .filter((x) => x.f.status === "OPEN")
+      .map(({ f, air, run }) => ({
+        id: f.id,
+        requirement: air.descriptionSnapshot,
+        act: air.actNameSnapshot,
+        unitCode: run.unitCode,
+        runCode: run.code,
+        ageDays: age(f.createdAt),
+      }))
+      .sort((a, b) => b.ageDays - a.ageDays);
+
+    return HttpResponse.json({
+      party: { id: party.id, name: party.name, auditType, legalName: pe?.legalName ?? null },
+      summary: {
+        totalRuns: runs.length,
+        publishedRuns: published.length,
+        inProgressRuns: runs.length - published.length,
+        overall: published.reduce((acc, r) => add(acc, r.score), empty()),
+        latest: runScore(published[0]),
+        previous: runScore(published[1]),
+        openFindings: open.length,
+        resolvedFindings: findings.filter((x) => x.f.status === "RESOLVED").length,
+        oldestOpenDays: open[0]?.ageDays ?? null,
+      },
+      trend: [...months.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([month, score]) => ({ month, score })),
+      units: [...units.values()]
+        .map((unitRuns) => {
+          const done = unitRuns.filter((r) => r.phase === "PUBLISHED");
+          const first = unitRuns[0];
+          return {
+            unitId: first.peUnitId,
+            unitCode: first.unitCode,
+            unitName: first.unitName,
+            peName: first.peName,
+            runCount: unitRuns.length,
+            overall: done.reduce((acc, r) => add(acc, r.score), empty()),
+            latest: runScore(done[0]),
+          };
+        })
+        .sort((a, b) => a.unitCode.localeCompare(b.unitCode)),
+      ncByAct: [...byAct.entries()]
+        .map(([act, count]) => ({ act, count }))
+        .sort((a, b) => b.count - a.count || a.act.localeCompare(b.act)),
+      repeatNc: [...repeats.values()]
+        .filter((r) => r.runIds.size > 1)
+        .map((r) => ({ requirement: r.requirement, act: r.act, count: r.runIds.size, lastPeriodEnd: r.lastPeriodEnd }))
+        .sort((a, b) => b.count - a.count || b.lastPeriodEnd.localeCompare(a.lastPeriodEnd)),
+      runs: runs.slice(0, 12),
+      openFindings: open.slice(0, 6),
     });
   }),
 

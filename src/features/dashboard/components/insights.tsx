@@ -5,7 +5,7 @@ import { CalendarCheck2Icon } from "lucide-react";
 import Link from "next/link";
 import { cn, formatCount } from "@/lib/utils";
 import type { DashboardData, DashboardDeadline } from "../api/dashboard.api";
-import { BarList } from "./charts";
+import { BarList } from "@/components/shared/charts";
 
 const deadlineLabel: Record<DashboardDeadline["kind"], string> = {
   WINDOW_1_OPENS: "Window 1 opens",
