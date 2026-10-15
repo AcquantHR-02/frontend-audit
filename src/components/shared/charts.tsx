@@ -4,6 +4,8 @@ import { format, parseISO } from "date-fns";
 import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import Link from "next/link";
 import { useId } from "react";
+import { AnimatedNumber } from "@/components/shared/animated-number";
+import { useGrowIn } from "@/hooks/use-motion";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatScore, runPhaseMeta, scoreInTenths, type StatusTone } from "@/lib/domain";
 import { cn, formatCount } from "@/lib/utils";
@@ -26,9 +28,10 @@ export function BarList({
   barClassName?: string;
 }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
+  const grown = useGrowIn();
   return (
     <ul className="space-y-1" aria-label={valueLabel}>
-      {rows.map((row) => {
+      {rows.map((row, index) => {
         const content = (
           <>
             <span className="truncate" title={row.label}>
@@ -39,8 +42,11 @@ export function BarList({
               title={`${row.label}: ${row.display ?? row.value}`}
             >
               <span
-                className={cn("block h-full rounded-full transition-[width] duration-500", barClassName)}
-                style={{ width: `${(row.value / max) * 100}%` }}
+                className={cn(
+                  "block h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none",
+                  barClassName,
+                )}
+                style={{ width: grown ? `${(row.value / max) * 100}%` : 0, transitionDelay: `${index * 60}ms` }}
               />
             </span>
             <span className="text-right font-medium tabular">{row.display ?? formatCount(row.value)}</span>
@@ -201,6 +207,7 @@ export function ComplianceRing({ score }: { score: ScoreCounts }) {
   const r = 52;
   const circumference = 2 * Math.PI * r;
   const total = Math.max(1, score.assignedTotal);
+  const grown = useGrowIn();
   const rows = [
     { label: "Complied", value: score.complied, dot: "bg-success" },
     { label: "Not complied", value: score.notComplied, dot: "bg-danger" },
@@ -232,12 +239,18 @@ export function ComplianceRing({ score }: { score: ScoreCounts }) {
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - share)}
-            className="transition-[stroke-dashoffset] duration-700 ease-out"
+            strokeDashoffset={circumference * (1 - (grown ? share : 0))}
+            className="transition-[stroke-dashoffset] duration-1000 ease-out motion-reduce:transition-none"
           />
         </svg>
         <div className="absolute inset-0 grid place-content-center text-center">
-          <span className="text-[26px] leading-none font-semibold tracking-tight tabular">{formatScore(score)}</span>
+          <span className="text-[26px] leading-none font-semibold tracking-tight tabular">
+            {scoreInTenths(score) === null ? (
+              "—"
+            ) : (
+              <AnimatedNumber value={(scoreInTenths(score) ?? 0) / 10} decimals={1} suffix="%" />
+            )}
+          </span>
           <span className="mt-1 text-[11px] text-muted-foreground">compliance</span>
         </div>
       </div>
@@ -253,7 +266,13 @@ export function ComplianceRing({ score }: { score: ScoreCounts }) {
               </span>
             </div>
             <div className="h-1 overflow-hidden rounded-full bg-muted" aria-hidden>
-              <div className={cn("h-full rounded-full", row.dot)} style={{ width: `${(row.value / total) * 100}%` }} />
+              <div
+                className={cn(
+                  "h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none",
+                  row.dot,
+                )}
+                style={{ width: grown ? `${(row.value / total) * 100}%` : 0 }}
+              />
             </div>
           </li>
         ))}
@@ -275,6 +294,7 @@ const phaseDot: Record<StatusTone, string> = {
 /** Run pipeline: one clickable tile per phase in workflow order, opening the filtered run list. */
 export function PhaseTiles({ counts, total }: { counts: Record<RunPhase, number>; total: number }) {
   const phases = Object.keys(runPhaseMeta) as RunPhase[];
+  const grown = useGrowIn();
   return (
     <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {phases.map((phase, i) => {
@@ -296,15 +316,21 @@ export function PhaseTiles({ counts, total }: { counts: Record<RunPhase, number>
                 <span className="truncate">{meta.label}</span>
               </span>
               <span className="flex items-baseline justify-between gap-2">
-                <span className="text-xl font-semibold tracking-tight tabular">{formatCount(count)}</span>
+                <AnimatedNumber value={count} className="text-xl font-semibold tracking-tight tabular" />
                 <span className="text-[11px] text-muted-foreground tabular">
                   {Math.round((count / Math.max(1, total)) * 100)}%
                 </span>
               </span>
               <span className="h-1 overflow-hidden rounded-full bg-muted" aria-hidden>
                 <span
-                  className={cn("block h-full rounded-full", phaseDot[meta.tone])}
-                  style={{ width: `${(count / Math.max(1, total)) * 100}%` }}
+                  className={cn(
+                    "block h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none",
+                    phaseDot[meta.tone],
+                  )}
+                  style={{
+                    width: grown ? `${(count / Math.max(1, total)) * 100}%` : 0,
+                    transitionDelay: `${i * 70}ms`,
+                  }}
                 />
               </span>
             </Link>

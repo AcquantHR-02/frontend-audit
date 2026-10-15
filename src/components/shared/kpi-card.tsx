@@ -1,7 +1,10 @@
+"use client";
+
 import { ArrowUpRightIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StatusTone } from "@/lib/domain";
+import { useGrowIn } from "@/hooks/use-motion";
 import { cn } from "@/lib/utils";
 
 const valueTone: Partial<Record<StatusTone, string>> = {
@@ -42,6 +45,7 @@ interface KpiCardProps {
 }
 
 export function KpiCard({ label, value, hint, tone, icon, href, progress, className }: KpiCardProps) {
+  const grown = useGrowIn();
   const body = (
     <>
       <div className="flex items-start justify-between gap-2">
@@ -68,8 +72,11 @@ export function KpiCard({ label, value, hint, tone, icon, href, progress, classN
       {progress !== undefined && (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
           <div
-            className={cn("h-full rounded-full", (tone && barTone[tone]) ?? "bg-chart-1")}
-            style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%` }}
+            className={cn(
+              "h-full rounded-full transition-[width] duration-1000 ease-out motion-reduce:transition-none",
+              (tone && barTone[tone]) ?? "bg-chart-1",
+            )}
+            style={{ width: grown ? `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%` : 0 }}
           />
         </div>
       )}

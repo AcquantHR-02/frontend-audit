@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cn, formatCount } from "@/lib/utils";
 import type { DashboardData, DashboardDeadline } from "../api/dashboard.api";
 import { BarList } from "@/components/shared/charts";
+import { useGrowIn } from "@/hooks/use-motion";
 
 const deadlineLabel: Record<DashboardDeadline["kind"], string> = {
   WINDOW_1_OPENS: "Window 1 opens",
@@ -108,6 +109,7 @@ export function FindingsAging({
   aging: DashboardData["findingsAging"];
   openFindings: number;
 }) {
+  const grown = useGrowIn();
   if (openFindings === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-6 text-center text-[13px] text-muted-foreground">
@@ -129,8 +131,11 @@ export function FindingsAging({
           b.count > 0 ? (
             <span
               key={b.label}
-              className={cn("h-full first:rounded-l-full last:rounded-r-full", shades[i])}
-              style={{ width: `${(b.count / openFindings) * 100}%` }}
+              className={cn(
+                "h-full transition-[width] duration-700 ease-out first:rounded-l-full last:rounded-r-full motion-reduce:transition-none",
+                shades[i],
+              )}
+              style={{ width: grown ? `${(b.count / openFindings) * 100}%` : 0 }}
             />
           ) : null,
         )}

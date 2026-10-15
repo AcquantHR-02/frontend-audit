@@ -295,3 +295,54 @@
 @utility fade-bottom {
   mask-image: linear-gradient(to bottom, black calc(100% - 2rem), transparent);
 }
+
+/* Dashboard motion: sections rise in one after another (stagger via --delay). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility animate-rise {
+  animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Slow drift for the hero's decorative rings. */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-10px, 8px) rotate(8deg);
+  }
+}
+@utility animate-drift {
+  animation: drift 14s ease-in-out infinite;
+}
+
+/* Soft sheen sweeping across the hero once on load. */
+@keyframes sheen {
+  from {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+@utility animate-sheen {
+  animation: sheen 1.6s 0.3s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-drift,
+  .animate-sheen {
+    animation: none !important;
+  }
+}
