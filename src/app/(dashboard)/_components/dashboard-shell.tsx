@@ -37,7 +37,7 @@ function ShellContent({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar user={user} onSignOut={signOut} />
       <SidebarInset className="min-w-0">
         <AppHeader user={user} onSignOut={signOut} />
         <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-6 p-4 sm:p-6">

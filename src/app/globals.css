@@ -198,14 +198,15 @@
 
   --hero-gradient: linear-gradient(120deg, #101c38 0%, #172c5a 55%, #154a73 100%);
 
-  --sidebar: oklch(0.17 0.03 262);
-  --sidebar-gradient: linear-gradient(180deg, #0a1328 0%, #0d1a36 60%, #112449 100%);
-  --sidebar-foreground: oklch(0.82 0.02 255);
+  /* Slate like the rest of the dark UI — one step above the page, separated by a hairline border */
+  --sidebar: oklch(0.18 0.014 260);
+  --sidebar-gradient: linear-gradient(180deg, oklch(0.19 0.015 260) 0%, oklch(0.172 0.013 260) 100%);
+  --sidebar-foreground: oklch(0.8 0.012 258);
   --sidebar-primary: #2bb3e3;
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(1 0 0 / 7%);
+  --sidebar-accent: oklch(1 0 0 / 6%);
   --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-border: oklch(0.27 0.014 260);
   --sidebar-ring: #2bb3e3;
 }
 

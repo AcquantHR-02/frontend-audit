@@ -21,9 +21,10 @@ import { siteConfig } from "@/config/site";
 import { can } from "@/lib/auth";
 import type { SessionUser } from "@/types/domain";
 import { Brand } from "./brand";
+import { SidebarUserMenu } from "./user-menu";
 
-/** Navy-gradient primary navigation; items filtered by the user's permissions. */
-export function AppSidebar({ user }: { user: SessionUser }) {
+/** Primary navigation (navy in light, slate in dark); items filtered by the user's permissions. */
+export function AppSidebar({ user, onSignOut }: { user: SessionUser; onSignOut: () => void }) {
   const pathname = usePathname();
   const activeHref = findNavItem(pathname)?.item.href;
   const { isMobile, setOpenMobile, state } = useSidebar();
@@ -33,7 +34,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
     .filter((group) => group.items.length > 0);
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
+    <Sidebar collapsible="icon" className="border-r-0 dark:border-r dark:border-sidebar-border">
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-3">
         <Link
           href="/overview"
@@ -60,7 +61,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
                       asChild
                       isActive={item.href === activeHref}
                       tooltip={item.title}
-                      className="h-9 text-[13px] text-sidebar-foreground/85 data-active:text-white data-active:shadow-[inset_2px_0_0_var(--sidebar-primary)] [&>svg]:text-sidebar-foreground/60 data-active:[&>svg]:text-sidebar-primary"
+                      className="h-9 text-[13px] text-sidebar-foreground/85 data-active:text-white data-active:shadow-[inset_2px_0_0_var(--sidebar-primary)] dark:data-active:bg-primary/15 [&>svg]:text-sidebar-foreground/60 data-active:[&>svg]:text-sidebar-primary"
                     >
                       <Link href={item.href} onClick={() => isMobile && setOpenMobile(false)}>
                         <item.icon aria-hidden />
@@ -75,8 +76,8 @@ export function AppSidebar({ user }: { user: SessionUser }) {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-4 py-3 text-[11px] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
-        v{siteConfig.version} · {siteConfig.organisation}
+      <SidebarFooter className="border-t border-sidebar-border p-2">
+        <SidebarUserMenu user={user} onSignOut={onSignOut} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
