@@ -7,6 +7,7 @@ import { mastersHandlers } from "./masters.handlers";
 import { notificationsHandlers } from "./notifications.handlers";
 import { reportsHandlers } from "./reports.handlers";
 import { reviewHandlers } from "./review.handlers";
+import { meHandlers } from "./me.handlers";
 import { searchHandlers } from "./search.handlers";
 import { usersHandlers } from "./users.handlers";
 
@@ -23,4 +24,5 @@ export const handlers = [
   ...notificationsHandlers,
   ...filesHandlers,
   ...searchHandlers,
+  ...meHandlers,
 ];

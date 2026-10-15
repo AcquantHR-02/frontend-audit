@@ -27,3 +27,14 @@ export interface UserView extends User {
 
 /** The narrow shape kept in the client auth state. */
 export type SessionUser = Pick<User, "id" | "email" | "fullName" | "role" | "vendorId" | "peId" | "mustChangePassword">;
+
+/** A named list filter a user saved (the list page's query string, minus paging). */
+export interface SavedView {
+  id: Id;
+  userId: Id;
+  /** Which list it belongs to, e.g. "audit-runs". */
+  scope: string;
+  name: string;
+  query: string;
+  createdAt: string;
+}

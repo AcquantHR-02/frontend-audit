@@ -14,6 +14,7 @@ import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
+import { SavedViewsMenu } from "@/features/saved-views";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useTableUrlState } from "@/hooks/use-table-url-state";
@@ -29,6 +30,17 @@ const statusOptions = (Object.keys(findingMeta) as FindingStatus[]).map((s) => (
   value: s,
   label: findingMeta[s].label,
 }));
+const ageOptions = [
+  { value: "30", label: "Over 30 days" },
+  { value: "60", label: "Over 60 days" },
+  { value: "90", label: "Over 90 days" },
+];
+const findingPresets = [
+  { name: "Open findings", query: "status=OPEN" },
+  { name: "Open over 60 days", query: "status=OPEN&age=60" },
+  { name: "PE audit findings", query: "type=PE" },
+  { name: "Resolved", query: "status=RESOLVED" },
+];
 const typeOptions = (Object.keys(auditTypeMeta) as AuditType[]).map((t) => ({
   value: t,
   label: auditTypeMeta[t].label,
@@ -58,12 +70,14 @@ export function FindingsPage() {
   const table = useTableUrlState("createdAt,desc");
   const [status, setStatus] = useUrlFilter("status", table.resetPage);
   const [type, setType] = useUrlFilter("type", table.resetPage);
+  const [age, setAge] = useUrlFilter("age", table.resetPage);
   const { data: summary } = useGetFindingsSummaryQuery();
   const filters = {
     search: table.request.search,
     sort: table.request.sort,
     status: (status || undefined) as FindingStatus | undefined,
     auditType: (type || undefined) as AuditType | undefined,
+    minAgeDays: age ? Number(age) : undefined,
   };
   const { data, isLoading, isFetching } = useGetFindingsQuery({ ...table.request, ...filters });
   const [loadFindings] = findingsApi.endpoints.getFindings.useLazyQuery();
@@ -149,17 +163,21 @@ export function FindingsPage() {
           onSearchChange={table.setSearch}
           searchPlaceholder="Search requirement, party, unit or run…"
           actions={
-            <ExportCsvButton
-              fileName="findings"
-              columns={findingCsvColumns}
-              disabled={!data?.totalElements}
-              fetchPage={(page, size) => loadFindings({ ...filters, page, size }).unwrap()}
-            />
+            <>
+              <SavedViewsMenu scope="findings" presets={findingPresets} />
+              <ExportCsvButton
+                fileName="findings"
+                columns={findingCsvColumns}
+                disabled={!data?.totalElements}
+                fetchPage={(page, size) => loadFindings({ ...filters, page, size }).unwrap()}
+              />
+            </>
           }
           filters={
             <>
               <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions} />
               <FilterSelect label="Type" value={type} onChange={setType} options={typeOptions} />
+              <FilterSelect label="Age" value={age} onChange={setAge} options={ageOptions} />
             </>
           }
         />
@@ -177,7 +195,7 @@ export function FindingsPage() {
           empty={
             <EmptyState
               icon={ShieldAlertIcon}
-              title={table.search || status || type ? "No findings match your filters" : "No findings"}
+              title={table.search || status || type || age ? "No findings match your filters" : "No findings"}
               description="Findings appear when a run is published with items marked not complied."
               className="rounded-none border-0"
             />

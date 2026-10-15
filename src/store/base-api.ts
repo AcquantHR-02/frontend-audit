@@ -31,6 +31,8 @@ export const TAG_TYPES = [
   "Report",
   "AuditTrail",
   "Notification",
+  "SavedView",
+  "Preferences",
 ] as const;
 export type TagType = (typeof TAG_TYPES)[number];
 

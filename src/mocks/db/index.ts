@@ -10,13 +10,14 @@ import type {
   EvidenceRecord,
   Finding,
   FindingAttachment,
+  SavedView,
 } from "@/types/domain";
 import type { AuditEvent } from "../audit-log";
 import { generateDemoRuns } from "./demo-runs";
 import * as seed from "./seed";
 
 const STORAGE_KEY = "ams.mock-db";
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 
 function createSeedDb() {
   const demo = generateDemoRuns(seed);
@@ -39,6 +40,9 @@ function createSeedDb() {
     findingAttachments: [] as FindingAttachment[],
     auditTrail: [] as AuditEvent[],
     notifications: [] as AppNotification[],
+    savedViews: [] as SavedView[],
+    /** Per-user notification types switched off in Settings. */
+    mutedNotifications: {} as Record<string, string[]>,
     users: structuredClone(seed.users),
     /** Plain-text only because this is a mock; the real backend stores hashes. */
     passwords: Object.fromEntries(seed.users.map((u) => [u.id, seed.MOCK_PASSWORD])) as Record<string, string>,

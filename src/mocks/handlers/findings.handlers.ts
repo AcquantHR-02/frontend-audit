@@ -71,8 +71,12 @@ export const findingsHandlers = [
     const status = url.searchParams.get("status");
     const type = url.searchParams.get("auditType");
     const runId = url.searchParams.get("runId");
+    // Opened at least N days ago (aging views, e.g. "open over 60 days").
+    const minAge = Number(url.searchParams.get("minAgeDays") ?? 0);
+    const openedBy = minAge > 0 ? new Date(Date.now() - minAge * 86_400_000).toISOString() : null;
     const rows = db.findings
       .filter((f) => canSee(user, f) && (!status || f.status === status))
+      .filter((f) => !openedBy || f.createdAt <= openedBy)
       .map(toView)
       .filter((f): f is FindingView => !!f && (!type || f.auditType === type) && (!runId || f.runId === runId));
     return HttpResponse.json(

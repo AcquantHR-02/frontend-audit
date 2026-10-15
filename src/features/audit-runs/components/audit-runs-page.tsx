@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
+import { SavedViewsMenu } from "@/features/saved-views";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -31,6 +32,14 @@ const typeOptions = (Object.keys(auditTypeMeta) as AuditType[]).map((t) => ({
   value: t,
   label: auditTypeMeta[t].label,
 }));
+const runPresets = [
+  { name: "Window 1 open", query: "phase=WINDOW_1" },
+  { name: "Awaiting auditor review", query: "phase=REVIEW" },
+  { name: "Window 2 open", query: "phase=WINDOW_2" },
+  { name: "Ready to publish", query: "phase=FINAL_REVIEW" },
+  { name: "PE audits", query: "type=PE" },
+  { name: "Published", query: "phase=PUBLISHED&sort=activityPeriodStart,desc" },
+];
 const phaseOptions = (Object.keys(runPhaseMeta) as RunPhase[]).map((p) => ({ value: p, label: runPhaseMeta[p].label }));
 
 const runCsvColumns: CsvColumn<AuditRunView>[] = [
@@ -164,12 +173,15 @@ export function AuditRunsPage() {
           onSearchChange={table.setSearch}
           searchPlaceholder="Search run, party or unit…"
           actions={
-            <ExportCsvButton
-              fileName="audit-runs"
-              columns={runCsvColumns}
-              disabled={!data?.totalElements}
-              fetchPage={(page, size) => loadRuns({ ...filters, page, size }).unwrap()}
-            />
+            <>
+              <SavedViewsMenu scope="audit-runs" presets={runPresets} />
+              <ExportCsvButton
+                fileName="audit-runs"
+                columns={runCsvColumns}
+                disabled={!data?.totalElements}
+                fetchPage={(page, size) => loadRuns({ ...filters, page, size }).unwrap()}
+              />
+            </>
           }
           filters={
             <>

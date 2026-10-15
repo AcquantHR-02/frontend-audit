@@ -2,7 +2,13 @@ import { baseApi, providesPage } from "@/store";
 import type { Page, PageRequest } from "@/types/api";
 import type { AuditType, FindingAttachment, FindingDetail, FindingStatus, FindingView } from "@/types/domain";
 
-export type FindingListParams = PageRequest & { status?: FindingStatus; auditType?: AuditType; runId?: string };
+export type FindingListParams = PageRequest & {
+  status?: FindingStatus;
+  auditType?: AuditType;
+  runId?: string;
+  /** Opened at least this many days ago. */
+  minAgeDays?: number;
+};
 
 export const findingsApi = baseApi.injectEndpoints({
   // Fast Refresh re-evaluates this module in dev; allow re-registering the same endpoints.
