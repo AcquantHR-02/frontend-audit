@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TABLE_MAX_HEIGHT } from "@/components/shared/data-table";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePrincipalEmployerOptions } from "@/features/masters";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -149,8 +150,8 @@ export function ReportsPage() {
           description="Adjust the filters or publish audit runs to see scores here."
         />
       ) : (
-        <div className={cn("overflow-x-auto rounded-lg border bg-card transition-opacity", isFetching && "opacity-60")}>
-          <Table>
+        <div className={cn("overflow-hidden rounded-lg border bg-card transition-opacity", isFetching && "opacity-60")}>
+          <Table containerClassName={cn("overflow-auto overscroll-contain", TABLE_MAX_HEIGHT)}>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead>Audited party / unit</TableHead>

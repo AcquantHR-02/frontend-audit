@@ -7,10 +7,11 @@ import { KpiCard } from "@/components/shared/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TABLE_MAX_HEIGHT } from "@/components/shared/data-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useGetAuditRunsQuery } from "@/features/audit-runs";
 import { daysUntil, fyLabel, nextPurgeDate, purgeCutoff, purgeNotice } from "@/lib/domain";
-import { formatDate, formatDateRange } from "@/lib/utils";
+import { cn, formatDate, formatDateRange } from "@/lib/utils";
 
 /** §12.14 — what the next purge removes. Purge is a full delete with no exceptions (no pinning). */
 export function RetentionPage() {
@@ -66,8 +67,8 @@ export function RetentionPage() {
           description={`Only runs whose activity ended on or before ${formatDate(cutoff)} are removed on ${formatDate(purgeDate)}.`}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <Table>
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <Table containerClassName={cn("overflow-auto overscroll-contain", TABLE_MAX_HEIGHT)}>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead>Run</TableHead>

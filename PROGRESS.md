@@ -62,7 +62,7 @@ audit-frontend/
 │   │       └── <feature>/{api, components, schemas, hooks, utils, index.ts}
 │   ├── components/
 │   │   ├── ui/                  # shadcn primitives (generated)
-│   │   ├── layout/              # sidebar, topbar, breadcrumbs, command menu
+│   │   ├── layout/              # sidebar, topbar, breadcrumbs
 │   │   └── shared/              # DataTable, PageHeader, StatusBadge, EmptyState...
 │   ├── config/                  # env (zod-validated), navigation, site
 │   ├── lib/
@@ -295,6 +295,13 @@ npm run lint && npm run typecheck
 
 - All select boxes (shared shadcn `Select`) open on mouse hover after 120 ms and close 250 ms after the pointer leaves the trigger and list; click, keyboard and touch work as before (`openOnHover={false}` opts out).
 - Smooth animation: list drops below the trigger (popper) with a 200 ms fade + zoom + slide; chevron rotates; trigger border and item hover transitions.
+
+### 2026-10-15 — Extra: dashboard UX, scrollable tables, header search removed
+
+- **Dashboard:** role-aware "Needs your attention" strip (review / publish / upload / findings, each linking to the filtered list; "all caught up" when empty); KPI cards have icons and link to their lists; compliance score shown once (big number + split + formula); phase bars link to `/audit-runs?phase=…`; party-score list scrolls inside its panel; full-layout loading skeleton.
+- **Score trend chart:** gradient area, latest value + month-on-month delta badge, only the latest point marked and labelled, dashed recessive grid, richer tooltip.
+- **Tables:** every table scrolls inside its own box with a sticky header (and sticky footer on Reports) instead of growing the page. `DataTable` caps height at `TABLE_MAX_HEIGHT` (`max(20rem, 100dvh − 22rem)`, override via `maxHeightClassName`); raw `<Table>` takes `containerClassName`.
+- **Header search (Ctrl+K command menu) removed** at the user's request — it was not useful; `command-menu.tsx` deleted.
 
 ## 8. Status
 

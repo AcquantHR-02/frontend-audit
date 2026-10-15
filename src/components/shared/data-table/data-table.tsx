@@ -44,6 +44,8 @@ interface DataTableProps<TData extends RowData> {
   onRowClick?: (row: TData) => void;
   empty: ReactNode;
   skeletonRows?: number;
+  /** Height cap for the scroll area; the table body scrolls, not the page. */
+  maxHeightClassName?: string;
 }
 
 const toSortingState = (sort?: string): SortingState => {
@@ -69,6 +71,7 @@ export function DataTable<TData extends RowData>({
   onRowClick,
   empty,
   skeletonRows = 8,
+  maxHeightClassName = TABLE_MAX_HEIGHT,
 }: DataTableProps<TData>) {
   const sorting = toSortingState(sort);
 
@@ -89,8 +92,8 @@ export function DataTable<TData extends RowData>({
   const rows = table.getRowModel().rows;
 
   return (
-    <div className="relative overflow-x-auto rounded-lg border bg-card">
-      <Table>
+    <div className="relative overflow-hidden rounded-lg border bg-card">
+      <Table containerClassName={cn("overflow-auto overscroll-contain", maxHeightClassName)}>
         <TableHeader>
           {table.getHeaderGroups().map((group) => (
             <TableRow key={group.id} className="bg-muted/50 hover:bg-muted/50">
@@ -154,3 +157,6 @@ export function DataTable<TData extends RowData>({
 }
 
 const EMPTY: never[] = [];
+
+/** Fits header + toolbar + pagination on screen; never shorter than ~6 rows on small phones. */
+export const TABLE_MAX_HEIGHT = "max-h-[max(20rem,calc(100dvh-22rem))]";

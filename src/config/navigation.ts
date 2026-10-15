@@ -23,7 +23,7 @@ export interface NavItem {
   icon: LucideIcon;
   /** Required to see the item AND to open the route (enforced in the dashboard layout). */
   permission: Permission;
-  /** Extra search terms for the command menu. */
+  /** Extra search terms (reserved for a future global search). */
   keywords?: string[];
 }
 
@@ -33,7 +33,7 @@ export interface NavGroup {
 }
 
 /**
- * Single source of truth for sidebar, breadcrumbs, command menu and route guarding.
+ * Single source of truth for sidebar, breadcrumbs and route guarding.
  * Items are filtered per user by permission — never by role.
  */
 export const navigation: NavGroup[] = [
