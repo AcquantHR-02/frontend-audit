@@ -303,6 +303,13 @@ npm run lint && npm run typecheck
 - **Tables:** every table scrolls inside its own box with a sticky header (and sticky footer on Reports) instead of growing the page. `DataTable` caps height at `TABLE_MAX_HEIGHT` (`max(20rem, 100dvh − 22rem)`, override via `maxHeightClassName`); raw `<Table>` takes `containerClassName`.
 - **Header search (Ctrl+K command menu) removed** at the user's request — it was not useful; `command-menu.tsx` deleted.
 
+### 2026-10-15 — Extra: dark theme, richer dashboard, login page
+
+- **Dark theme reworked:** neutral slate surfaces with three elevation steps (page < card < popover), opaque borders, softer off-white text, white text on primary buttons, subtle card lift; navy kept for the sidebar, hero and accents only.
+- **Dashboard:** gradient welcome hero (date, role, Reports / New audit run); KPI cards with tinted icon chips, hover lift and a progress meter; compliance **ring gauge** with C / NC / NA rows; **phase tiles** (workflow order, count, share, click-through); party scores sorted lowest-first with a faded scroll edge; trend chart axis no longer clipped.
+- **Login:** fixed-height split screen — the page never scrolls (hero image / highlights hide on short screens); form in an elevated card with soft brand glow; "Welcome back" copy; compact demo-account chips; wordmark turns white in dark mode; trust note under the card.
+- Verified by screenshots (light/dark, 1440×900, 1366×768, 390×700) plus type-check, lint and tests.
+
 ## 8. Status
 
 All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).

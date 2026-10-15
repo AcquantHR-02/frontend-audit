@@ -10,11 +10,9 @@ export default function LoginPage() {
     // useSearchParams (?next=) is request data → must sit behind a Suspense boundary.
     <Suspense fallback={<FullPageLoader />}>
       <GuestGuard>
-        <div className="mb-8 space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-          <p className="text-muted-foreground">
-            Use your work email. Your workspace depends on the role on your account.
-          </p>
+        <div className="mb-6 space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+          <p className="text-muted-foreground">Sign in with your work email to continue.</p>
         </div>
         <LoginForm />
       </GuestGuard>

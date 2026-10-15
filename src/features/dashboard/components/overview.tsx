@@ -2,6 +2,8 @@
 
 import {
   ArrowRightIcon,
+  BarChart3Icon,
+  CalendarDaysIcon,
   CircleAlertIcon,
   CircleCheckIcon,
   ClipboardCheckIcon,
@@ -12,11 +14,11 @@ import {
   UploadIcon,
   type LucideIcon,
 } from "lucide-react";
+import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { KpiCard } from "@/components/shared/kpi-card";
-import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,9 +28,8 @@ import { useCan, useCurrentUser } from "@/hooks/use-current-user";
 import { isAuditor, Permission } from "@/lib/auth";
 import { formatScore, roleMeta, runPhaseMeta, scoreInTenths } from "@/lib/domain";
 import { cn, formatCount, formatDateRange } from "@/lib/utils";
-import type { RunPhase } from "@/types/domain";
 import { useGetDashboardQuery, type DashboardData } from "../api/dashboard.api";
-import { BarList, ComplianceSplit, ScoreTrend } from "./charts";
+import { BarList, ComplianceRing, PhaseTiles, ScoreTrend } from "./charts";
 
 const descriptions = {
   AUDITOR_ADMIN: "Organisation-wide status of audit runs, reviews and findings across all Principal Employers.",
@@ -181,6 +182,62 @@ function OverviewSkeleton() {
   );
 }
 
+/** Brand gradient banner: greeting, date, role and the primary actions. */
+function WelcomeHero({
+  title,
+  role,
+  description,
+  canCreate,
+}: {
+  title: string;
+  role: string;
+  description: string;
+  canCreate: boolean;
+}) {
+  return (
+    <section className="relative isolate overflow-hidden rounded-2xl bg-hero-gradient px-5 py-6 text-white shadow-sm sm:px-7 sm:py-7">
+      {/* Decorative rings — purely visual. */}
+      <div
+        aria-hidden
+        className="absolute -top-24 -right-16 -z-10 size-72 rounded-full border-[28px] border-white/[0.06]"
+      />
+      <div
+        aria-hidden
+        className="absolute -right-4 -bottom-28 -z-10 size-56 rounded-full border-[18px] border-white/[0.05]"
+      />
+      <div className="flex flex-wrap items-end justify-between gap-5">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
+            <CalendarDaysIcon className="size-3.5" aria-hidden />
+            {format(new Date(), "EEEE, d MMMM yyyy")}
+            <span className="rounded-full bg-white/15 px-2 py-0.5 font-medium text-white">{role}</span>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">{title}</h1>
+          <p className="max-w-2xl text-sm text-white/75">{description}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            asChild
+            variant="outline"
+            className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+          >
+            <Link href="/reports">
+              <BarChart3Icon /> Reports
+            </Link>
+          </Button>
+          {canCreate && (
+            <Button asChild className="bg-white text-[#0c2656] shadow-sm hover:bg-white/90">
+              <Link href="/audit-runs/new">
+                <PlusIcon /> New audit run
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function Overview() {
   const user = useCurrentUser();
   const router = useRouter();
@@ -193,19 +250,11 @@ export function Overview() {
 
   return (
     <>
-      <PageHeader
+      <WelcomeHero
         title={`${greeting()}, ${user.fullName.split(" ")[0]}`}
-        badge={<StatusBadge meta={roleMeta[user.role]} />}
+        role={roleMeta[user.role].label}
         description={descriptions[user.role]}
-        actions={
-          canCreate && (
-            <Button asChild>
-              <Link href="/audit-runs/new">
-                <PlusIcon /> New audit run
-              </Link>
-            </Button>
-          )
-        }
+        canCreate={canCreate}
       />
 
       {isLoading || !data ? (
@@ -248,7 +297,8 @@ function OverviewContent({
           label="Audit runs"
           icon={<FolderKanbanIcon />}
           value={formatCount(data.totalRuns)}
-          hint={`${formatCount(inProgress)} in progress`}
+          hint={`${formatCount(inProgress)} in progress · ${formatCount(data.runsByPhase.PUBLISHED)} published`}
+          progress={data.runsByPhase.PUBLISHED / Math.max(1, data.totalRuns)}
           href="/audit-runs"
         />
         {auditor ? (
@@ -274,6 +324,7 @@ function OverviewContent({
           label="Published this FY"
           icon={<ShieldCheckIcon />}
           value={formatCount(data.publishedThisFy)}
+          tone="success"
           hint="completed audits"
           href="/audit-runs?phase=PUBLISHED"
         />
@@ -289,28 +340,19 @@ function OverviewContent({
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Panel title="Compliance score" action={<span className="text-xs text-muted-foreground">Published runs</span>}>
-          <div className="mb-3 flex flex-wrap items-baseline gap-x-2">
-            <span className="text-4xl font-semibold tracking-tight text-primary tabular">{formatScore(score)}</span>
-            <span className="text-sm text-muted-foreground">of assigned items complied or NA</span>
-          </div>
-          <ComplianceSplit score={score} />
-          <p className="mt-3 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground tabular">
+          <ComplianceRing score={score} />
+          <p className="mt-4 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground tabular">
             (Complied {formatCount(score.complied)} + NA {formatCount(score.notApplicable)}) ÷{" "}
             {formatCount(score.assignedTotal)} items = {formatScore(score)}
           </p>
         </Panel>
         <Panel
           title="Audit runs by phase"
-          action={<span className="text-xs text-muted-foreground">Click a phase to see its runs</span>}
+          action={
+            <span className="text-xs text-muted-foreground">{formatCount(data.totalRuns)} runs · click to open</span>
+          }
         >
-          <BarList
-            valueLabel="Runs per phase"
-            rows={(Object.keys(runPhaseMeta) as RunPhase[]).map((phase) => ({
-              label: runPhaseMeta[phase].label,
-              value: data.runsByPhase[phase],
-              href: `/audit-runs?phase=${phase}`,
-            }))}
-          />
+          <PhaseTiles counts={data.runsByPhase} total={data.totalRuns} />
         </Panel>
       </div>
 
@@ -322,18 +364,23 @@ function OverviewContent({
             <p className="text-[13px] text-muted-foreground">Trends appear after two or more months are published.</p>
           )}
         </Panel>
-        <Panel title={partyView ? "Score by audited party" : "Score by month"}>
-          {/* Long party lists scroll inside the panel instead of stretching the page. */}
-          <div className="max-h-56 overflow-y-auto overscroll-contain pr-1">
+        <Panel
+          title={partyView ? "Score by audited party" : "Score by month"}
+          action={partyView && <span className="text-xs text-muted-foreground">Lowest first</span>}
+        >
+          {/* Long lists scroll inside the panel; weakest parties first = where to look next. */}
+          <div className="max-h-64 overflow-y-auto overscroll-contain fade-bottom pr-1 pb-6">
             <BarList
               valueLabel={partyView ? "Compliance score by party" : "Compliance score by month"}
               rows={
                 partyView
-                  ? data.partyScores.map((p) => ({
-                      label: p.name,
-                      value: (scoreInTenths(p.score) ?? 0) / 10,
-                      display: formatScore(p.score),
-                    }))
+                  ? [...data.partyScores]
+                      .sort((x, y) => (scoreInTenths(x.score) ?? 0) - (scoreInTenths(y.score) ?? 0))
+                      .map((p) => ({
+                        label: p.name,
+                        value: (scoreInTenths(p.score) ?? 0) / 10,
+                        display: formatScore(p.score),
+                      }))
                   : data.trend.map((t) => ({
                       label: t.month,
                       value: (scoreInTenths(t.score) ?? 0) / 10,

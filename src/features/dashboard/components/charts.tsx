@@ -5,9 +5,9 @@ import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import Link from "next/link";
 import { useId } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { formatScore, scoreInTenths } from "@/lib/domain";
+import { formatScore, runPhaseMeta, scoreInTenths, type StatusTone } from "@/lib/domain";
 import { cn, formatCount } from "@/lib/utils";
-import type { ScoreCounts } from "@/types/domain";
+import type { RunPhase, ScoreCounts } from "@/types/domain";
 
 /**
  * Chart conventions (dataviz skill): one hue for magnitude, reserved status colours only for
@@ -63,44 +63,6 @@ export function BarList({
   );
 }
 
-/** Compliance split: stacked status bar (2px gaps) + a labelled legend, so identity is never colour-alone. */
-export function ComplianceSplit({ score }: { score: ScoreCounts }) {
-  const stamped = score.complied + score.notComplied + score.notApplicable;
-  const parts = [
-    { key: "C", label: "Complied", value: score.complied, className: "bg-success" },
-    { key: "NC", label: "Not complied", value: score.notComplied, className: "bg-danger" },
-    { key: "NA", label: "Not applicable", value: score.notApplicable, className: "bg-neutral/50" },
-  ];
-  return (
-    <div className="space-y-3">
-      <div
-        className="flex h-2.5 gap-0.5 overflow-hidden rounded-full"
-        role="img"
-        aria-label={parts.map((p) => `${p.label} ${p.value}`).join(", ")}
-      >
-        {parts.map((p) =>
-          p.value > 0 ? (
-            <span
-              key={p.key}
-              className={`${p.className} first:rounded-l-full last:rounded-r-full`}
-              style={{ width: `${(p.value / Math.max(1, stamped)) * 100}%` }}
-              title={`${p.label}: ${formatCount(p.value)}`}
-            />
-          ) : null,
-        )}
-      </div>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-        {parts.map((p) => (
-          <li key={p.key} className="flex items-center gap-1.5">
-            <span className={`size-2 rounded-full ${p.className}`} aria-hidden />
-            {p.label} <b className="tabular">{formatCount(p.value)}</b>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 /** Score trend — single series (title names it): gradient area, headline + month-on-month delta,
  * direct label on the latest point only, crosshair tooltip. */
 export function ScoreTrend({ data }: { data: { month: string; score: ScoreCounts }[] }) {
@@ -141,7 +103,7 @@ export function ScoreTrend({ data }: { data: { month: string; score: ScoreCounts
       </div>
       <div className="h-52 w-full">
         <ResponsiveContainer>
-          <AreaChart data={points} margin={{ top: 20, right: 16, bottom: 0, left: -12 }}>
+          <AreaChart data={points} margin={{ top: 22, right: 20, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.28} />
@@ -164,7 +126,7 @@ export function ScoreTrend({ data }: { data: { month: string; score: ScoreCounts
               tickCount={4}
               tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               tickFormatter={(v) => `${v}%`}
-              width={48}
+              width={44}
             />
             <Tooltip
               cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
@@ -223,5 +185,129 @@ export function ScoreTrend({ data }: { data: { month: string; score: ScoreCounts
         </ResponsiveContainer>
       </div>
     </div>
+  );
+}
+
+/**
+ * Compliance ring — a single headline share (score), so one arc in the brand hue; the C / NC / NA
+ * breakdown sits beside it as labelled rows (status colour always paired with text).
+ */
+export function ComplianceRing({ score }: { score: ScoreCounts }) {
+  const gradientId = `ring-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const share = (scoreInTenths(score) ?? 0) / 1000;
+  const r = 52;
+  const circumference = 2 * Math.PI * r;
+  const total = Math.max(1, score.assignedTotal);
+  const rows = [
+    { label: "Complied", value: score.complied, dot: "bg-success" },
+    { label: "Not complied", value: score.notComplied, dot: "bg-danger" },
+    { label: "Not applicable", value: score.notApplicable, dot: "bg-neutral" },
+  ];
+
+  return (
+    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+      <div className="relative size-36 shrink-0">
+        <svg
+          viewBox="0 0 120 120"
+          className="size-full -rotate-90"
+          role="img"
+          aria-label={`Compliance score ${formatScore(score)}`}
+        >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="var(--chart-1)" />
+              <stop offset="100%" stopColor="var(--brand-cyan)" />
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r={r} fill="none" stroke="var(--muted)" strokeWidth="10" />
+          <circle
+            cx="60"
+            cy="60"
+            r={r}
+            fill="none"
+            stroke={`url(#${gradientId})`}
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - share)}
+            className="transition-[stroke-dashoffset] duration-700 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 grid place-content-center text-center">
+          <span className="text-[26px] leading-none font-semibold tracking-tight tabular">{formatScore(score)}</span>
+          <span className="mt-1 text-[11px] text-muted-foreground">compliance</span>
+        </div>
+      </div>
+      <ul className="w-full min-w-0 flex-1 space-y-2.5">
+        {rows.map((row) => (
+          <li key={row.label} className="space-y-1">
+            <div className="flex items-center gap-2 text-[13px]">
+              <span className={cn("size-2 rounded-full", row.dot)} aria-hidden />
+              <span>{row.label}</span>
+              <span className="ml-auto font-medium tabular">{formatCount(row.value)}</span>
+              <span className="w-12 text-right text-xs text-muted-foreground tabular">
+                {Math.round((row.value / total) * 1000) / 10}%
+              </span>
+            </div>
+            <div className="h-1 overflow-hidden rounded-full bg-muted" aria-hidden>
+              <div className={cn("h-full rounded-full", row.dot)} style={{ width: `${(row.value / total) * 100}%` }} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const phaseDot: Record<StatusTone, string> = {
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  info: "bg-info",
+  neutral: "bg-neutral",
+  primary: "bg-primary",
+  violet: "bg-violet",
+};
+
+/** Run pipeline: one clickable tile per phase in workflow order, opening the filtered run list. */
+export function PhaseTiles({ counts, total }: { counts: Record<RunPhase, number>; total: number }) {
+  const phases = Object.keys(runPhaseMeta) as RunPhase[];
+  return (
+    <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {phases.map((phase, i) => {
+        const count = counts[phase];
+        const meta = runPhaseMeta[phase];
+        return (
+          <li key={phase}>
+            <Link
+              href={`/audit-runs?phase=${phase}`}
+              className={cn(
+                "group flex h-full flex-col gap-1.5 rounded-lg border bg-background/40 p-3 transition-all outline-none hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/50 focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                count === 0 && "opacity-60 hover:opacity-100",
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="grid size-4 place-items-center rounded-full bg-muted text-[10px] font-semibold tabular">
+                  {i + 1}
+                </span>
+                <span className="truncate">{meta.label}</span>
+              </span>
+              <span className="flex items-baseline justify-between gap-2">
+                <span className="text-xl font-semibold tracking-tight tabular">{formatCount(count)}</span>
+                <span className="text-[11px] text-muted-foreground tabular">
+                  {Math.round((count / Math.max(1, total)) * 100)}%
+                </span>
+              </span>
+              <span className="h-1 overflow-hidden rounded-full bg-muted" aria-hidden>
+                <span
+                  className={cn("block h-full rounded-full", phaseDot[meta.tone])}
+                  style={{ width: `${(count / Math.max(1, total)) * 100}%` }}
+                />
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

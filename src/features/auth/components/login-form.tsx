@@ -43,7 +43,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {apiError && (
         <Alert variant="destructive" role="alert">
           {isLocked ? <LockIcon /> : <AlertTriangleIcon />}
@@ -53,7 +53,7 @@ export function LoginForm() {
       )}
 
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <FieldGroup className="gap-5">
+        <FieldGroup className="gap-4">
           <Field data-invalid={!!errors.email}>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
