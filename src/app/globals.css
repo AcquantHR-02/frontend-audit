@@ -267,6 +267,30 @@
     0 1px 2px oklch(0 0 0 / 30%);
 }
 
+/* Bell wiggle when there are unread notifications (once per mount) */
+@keyframes bell-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  15%,
+  45% {
+    transform: rotate(14deg);
+  }
+  30%,
+  60% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[bell-ring"] {
+    animation: none !important;
+  }
+}
+
 /* Fades the last row of a scrollable list so it reads as "more below", not cut off */
 @utility fade-bottom {
   mask-image: linear-gradient(to bottom, black calc(100% - 2rem), transparent);

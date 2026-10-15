@@ -7,3 +7,4 @@ export * from "./audit-item";
 export * from "./evidence";
 export * from "./finding";
 export * from "./user";
+export * from "./notification";

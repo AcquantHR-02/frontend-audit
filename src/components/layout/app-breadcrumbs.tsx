@@ -27,6 +27,9 @@ export function AppBreadcrumbs() {
     if (pathname !== match.item.href) crumbs.push({ label: detailLabel ?? "Details" });
   } else if (match) {
     crumbs.push({ label: match.item.title });
+  } else if (detailLabel) {
+    // Routes outside the sidebar (e.g. /notifications) name themselves via usePageTitle.
+    crumbs.push({ label: detailLabel });
   }
 
   return (

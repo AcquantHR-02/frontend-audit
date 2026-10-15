@@ -14,6 +14,7 @@ import {
 } from "@/lib/domain";
 import type { AuditRun, ComplianceStatus, EvidenceRecord, StoredFile, User } from "@/types/domain";
 import { logEvent } from "../audit-log";
+import { auditorRecipients, notify } from "../notifications";
 import { requireUser } from "../crud";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso, todayIso } from "../utils";
@@ -139,6 +140,19 @@ export const reviewHandlers = [
       air.id,
       `${run.code}: ${files.length} file(s) on "${air.descriptionSnapshot.slice(0, 60)}"`,
     );
+    if (asParty) {
+      const view = toRunView(run);
+      notify(
+        auditorRecipients(),
+        {
+          type: naProposed ? "NA_PROPOSED" : "EVIDENCE_SUBMITTED",
+          title: naProposed ? `NA proposed on ${run.code}` : `Evidence submitted on ${run.code}`,
+          body: `${view.partyName} · ${view.unitCode}: "${air.descriptionSnapshot}"`,
+          href: `/audit-runs/${run.id}`,
+        },
+        user.id,
+      );
+    }
     air.updatedAt = nowIso();
     air.updatedBy = user.id;
     persist();

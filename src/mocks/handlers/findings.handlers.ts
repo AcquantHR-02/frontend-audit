@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 import { can, Permission } from "@/lib/auth";
 import type { Finding, FindingDetail, FindingStatus, FindingView, StoredFile, User } from "@/types/domain";
 import { logEvent } from "../audit-log";
+import { auditorRecipients, notify, partyRecipients } from "../notifications";
 import { requireUser } from "../crud";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso, paginate } from "../utils";
@@ -152,6 +153,20 @@ export const findingsHandlers = [
     };
     db.findingAttachments.push(attachment);
     logEvent(user, "REMEDIATION_UPLOADED", "Finding", finding.id, `${files.length} file(s) uploaded as remediation`);
+    const remediated = party ? toView(finding) : null;
+    if (remediated) {
+      const view = remediated;
+      notify(
+        auditorRecipients(),
+        {
+          type: "REMEDIATION_SUBMITTED",
+          title: "Remediation submitted",
+          body: `${view.partyName} · ${view.runCode}: "${view.requirement}"`,
+          href: `/findings/${finding.id}`,
+        },
+        user.id,
+      );
+    }
     persist();
     return HttpResponse.json(attachment, { status: 201 });
   }),
@@ -165,7 +180,24 @@ export const findingsHandlers = [
     if (!finding) return errorResponse(404, "Finding not found.");
     const body = (await request.json()) as { status?: FindingStatus; remarks?: string | null };
     if (body.status && !["OPEN", "RESOLVED"].includes(body.status)) return errorResponse(400, "Invalid status.");
-    if (body.status) finding.status = body.status;
+    if (body.status && body.status !== finding.status) {
+      finding.status = body.status;
+      const view = toView(finding);
+      const run = view && db.auditRuns.find((r) => r.id === view.runId);
+      if (view && run) {
+        const resolved = body.status === "RESOLVED";
+        notify(
+          partyRecipients(run),
+          {
+            type: resolved ? "FINDING_RESOLVED" : "FINDING_REOPENED",
+            title: resolved ? "Finding resolved" : "Finding reopened",
+            body: `${view.runCode}: "${view.requirement}"${resolved ? "" : " needs more remediation."}`,
+            href: `/findings/${finding.id}`,
+          },
+          user.id,
+        );
+      }
+    }
     if (body.remarks !== undefined) finding.remarks = body.remarks?.trim() || null;
     logEvent(
       user,

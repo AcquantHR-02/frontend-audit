@@ -3,6 +3,7 @@ import { auditRunsHandlers } from "./audit-runs.handlers";
 import { authHandlers } from "./auth.handlers";
 import { findingsHandlers } from "./findings.handlers";
 import { mastersHandlers } from "./masters.handlers";
+import { notificationsHandlers } from "./notifications.handlers";
 import { reportsHandlers } from "./reports.handlers";
 import { reviewHandlers } from "./review.handlers";
 import { usersHandlers } from "./users.handlers";
@@ -17,4 +18,5 @@ export const handlers = [
   ...findingsHandlers,
   ...reportsHandlers,
   ...usersHandlers,
+  ...notificationsHandlers,
 ];

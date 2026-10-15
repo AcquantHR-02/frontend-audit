@@ -9,6 +9,7 @@ import { Forbidden } from "@/components/shared/forbidden";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { findNavItem } from "@/config/navigation";
 import { AuthGuard, useLogoutMutation } from "@/features/auth";
+import { NotificationsMenu } from "@/features/notifications";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { can } from "@/lib/auth";
 
@@ -41,7 +42,7 @@ function ShellContent({ children }: { children: ReactNode }) {
       <SidebarProvider>
         <AppSidebar user={user} />
         <SidebarInset className="min-w-0">
-          <AppHeader user={user} onSignOut={signOut} />
+          <AppHeader user={user} onSignOut={signOut} notifications={<NotificationsMenu />} />
           <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-6 p-4 sm:p-6">
             {/* Pages read URL state (search params) → Suspense boundary required by Cache Components. */}
             <Suspense>
