@@ -13,6 +13,7 @@ import {
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
+import { FilterBar, FilterChip } from "@/components/shared/active-filters";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
@@ -27,7 +28,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { useUrlFilter } from "@/hooks/use-url-filter";
 import { isAuditor } from "@/lib/auth";
 import { auditTypeMeta, formatScore } from "@/lib/domain";
-import { cn, formatCount, formatDateRange } from "@/lib/utils";
+import { cn, formatCount, formatDate, formatDateRange } from "@/lib/utils";
 import type { AuditType, ScoreCounts } from "@/types/domain";
 import { useGetScoreRollupQuery } from "../api/reports.api";
 import { exportScoreRollup } from "@/lib/export/excel";
@@ -104,7 +105,7 @@ export function ReportsPage() {
         }
       />
 
-      <div className="flex flex-wrap items-end gap-3">
+      <FilterBar rowClassName="items-end gap-3">
         {isAuditor(user) && (
           <FilterSelect label="Principal Employer" value={peId} onChange={setPeId} options={peOptions} />
         )}
@@ -135,7 +136,9 @@ export function ReportsPage() {
             />
           </div>
         </div>
-      </div>
+        <FilterChip id="from" label="Ending from" value={from && formatDate(from)} onClear={() => setFrom("")} />
+        <FilterChip id="to" label="Ending to" value={to && formatDate(to)} onClear={() => setTo("")} />
+      </FilterBar>
 
       {data && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

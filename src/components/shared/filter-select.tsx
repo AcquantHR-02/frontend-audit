@@ -1,5 +1,6 @@
 "use client";
 
+import { useActiveFilter } from "@/components/shared/active-filters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,10 @@ export function FilterSelect({
   allLabel?: string;
   className?: string;
 }) {
+  const selected = options.find((o) => o.value === value);
+  // Shows as a removable chip in the surrounding <FilterBar>.
+  useActiveFilter(label, value ? { label, value: selected?.label ?? value } : null, () => onChange(""));
+
   return (
     <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? "" : v)}>
       <SelectTrigger

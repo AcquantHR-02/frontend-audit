@@ -324,6 +324,12 @@ npm run lint && npm run typecheck
 - **Dark sidebar** now uses the same slate surfaces as the rest of the dark UI (one step above the page, hairline border, primary-tinted active item) instead of the navy gradient; light mode keeps the navy.
 - **Profile:** header trigger shows a brand-gradient avatar with an online dot; the menu has a gradient identity card (name, email, role), a Light / Dark / System segmented switch that stays open while switching, and icon-led Change password / Sign out actions. The sidebar footer now holds a matching profile card (avatar only when collapsed) that opens the same menu.
 
+### 2026-10-15 — Extra: clear filters everywhere
+
+- New `components/shared/active-filters.tsx`: `<FilterBar>` + `useActiveFilter` / `<FilterChip>`. Every active filter shows as a removable chip ("Phase: Published ×") under the filter row, with an "N active" count and **Clear all**.
+- Works on every list automatically: `FilterSelect` and the toolbar search register themselves; `DataTableToolbar` renders a `FilterBar`. Reports wraps its selects + date range in a `FilterBar` (date chips via `<FilterChip>`).
+- Chips sit outside the select triggers on purpose — an inline × inside a hover-to-open select would be swallowed by the opening list.
+
 ## 8. Status
 
 All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).

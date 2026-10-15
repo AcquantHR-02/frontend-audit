@@ -2,6 +2,7 @@
 
 import { SearchIcon, XIcon } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { FilterBar, FilterChip } from "@/components/shared/active-filters";
 import { Input } from "@/components/ui/input";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
@@ -15,7 +16,10 @@ interface DataTableToolbarProps {
   actions?: ReactNode;
 }
 
-/** Debounced search + filters + actions. Search commits to the URL 300 ms after typing stops. */
+/**
+ * Debounced search + filters + actions, with removable active-filter chips and "Clear all"
+ * underneath. Search commits to the URL 300 ms after typing stops.
+ */
 export function DataTableToolbar({
   search,
   onSearchChange,
@@ -40,7 +44,16 @@ export function DataTableToolbar({
   }, [debounced]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <FilterBar trailing={actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}>
+      <FilterChip
+        id="search"
+        label="Search"
+        value={search && `“${search}”`}
+        onClear={() => {
+          setDraft("");
+          onSearchChange("");
+        }}
+      />
       <div className="relative w-full sm:w-72">
         <SearchIcon
           className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
@@ -65,7 +78,6 @@ export function DataTableToolbar({
         )}
       </div>
       {filters}
-      {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
-    </div>
+    </FilterBar>
   );
 }
