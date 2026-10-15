@@ -84,21 +84,20 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
       </aside>
 
       <main className="relative isolate flex min-h-0 flex-col overflow-y-auto bg-background">
-        {/* Soft brand glow behind the card */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 -right-32 -z-10 size-96 rounded-full bg-primary/10 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 -left-20 -z-10 size-80 rounded-full bg-brand-cyan/10 blur-3xl"
-        />
+        {/* Soft brand glow behind the card — clipped in its own layer, otherwise the
+            off-edge blobs extend the scroll area and make the column scrollable. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute -top-32 -right-32 size-96 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -bottom-32 -left-20 size-80 rounded-full bg-brand-cyan/10 blur-3xl" />
+        </div>
 
-        <div className="m-auto w-full max-w-[420px] px-4 py-6 sm:px-6">
+        <div className="m-auto w-full max-w-[420px] px-4 py-6 sm:px-6 [@media(max-height:700px)]:py-3">
           {/* The wordmark's navy lettering is turned white on dark surfaces. */}
-          <Wordmark className="mx-auto mb-6 w-40 sm:mb-8 sm:w-44 dark:brightness-0 dark:invert" />
-          <div className="rounded-2xl border bg-card p-5 shadow-lg shadow-primary/5 sm:p-7">{children}</div>
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Wordmark className="mx-auto mb-6 w-40 sm:mb-8 sm:w-44 dark:brightness-0 dark:invert [@media(max-height:700px)]:mb-3 [@media(max-height:700px)]:w-32" />
+          <div className="rounded-2xl border bg-card p-5 shadow-lg shadow-primary/5 sm:p-7 [@media(max-height:700px)]:p-5">
+            {children}
+          </div>
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground [@media(max-height:700px)]:hidden">
             <ShieldCheckIcon className="size-3.5 text-success" aria-hidden />
             Role-based access · every action is audit-logged
           </p>

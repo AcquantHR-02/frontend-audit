@@ -10,7 +10,7 @@ export default function LoginPage() {
     // useSearchParams (?next=) is request data → must sit behind a Suspense boundary.
     <Suspense fallback={<FullPageLoader />}>
       <GuestGuard>
-        <div className="mb-6 space-y-1">
+        <div className="mb-6 space-y-1 [@media(max-height:700px)]:mb-4">
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
           <p className="text-muted-foreground">Sign in with your work email to continue.</p>
         </div>
