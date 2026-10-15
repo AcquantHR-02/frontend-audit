@@ -1,11 +1,11 @@
 import { http, HttpResponse } from "msw";
-import { authenticate } from "../auth";
+import { authenticate, toSessionUser } from "../auth";
 import { db, persist } from "../db";
 import { apiUrl, errorResponse, networkDelay, newId, nowIso } from "../utils";
 
 const MAX_VIEWS_PER_LIST = 20;
 
-/** The signed-in user's own preferences: saved list views. */
+/** The signed-in user's own profile and preferences: saved list views, notification settings. */
 export const meHandlers = [
   http.get(apiUrl("/me/views"), async ({ request }) => {
     await networkDelay();
@@ -58,5 +58,41 @@ export const meHandlers = [
     db.savedViews.splice(index, 1);
     persist();
     return new HttpResponse(null, { status: 204 });
+  }),
+  /** Profile: the user may change their display name (email and role are admin-managed). */
+  http.patch(apiUrl("/me"), async ({ request }) => {
+    await networkDelay();
+    const user = authenticate(request);
+    if (user instanceof Response) return user;
+    const { fullName } = (await request.json()) as { fullName?: string };
+    const name = fullName?.trim().replace(/\s+/g, " ") ?? "";
+    if (name.length < 2 || name.length > 80) {
+      return errorResponse(400, "Enter your full name (2–80 characters).", {
+        code: "VALIDATION_FAILED",
+        fieldErrors: { fullName: "Enter your full name (2–80 characters)" },
+      });
+    }
+    user.fullName = name;
+    user.updatedAt = nowIso();
+    user.updatedBy = user.id;
+    persist();
+    return HttpResponse.json(toSessionUser(user));
+  }),
+
+  http.get(apiUrl("/me/preferences"), async ({ request }) => {
+    await networkDelay();
+    const user = authenticate(request);
+    if (user instanceof Response) return user;
+    return HttpResponse.json({ mutedNotifications: db.mutedNotifications[user.id] ?? [] });
+  }),
+
+  http.put(apiUrl("/me/preferences"), async ({ request }) => {
+    await networkDelay();
+    const user = authenticate(request);
+    if (user instanceof Response) return user;
+    const { mutedNotifications = [] } = (await request.json()) as { mutedNotifications?: string[] };
+    db.mutedNotifications[user.id] = [...new Set(mutedNotifications.map(String))];
+    persist();
+    return HttpResponse.json({ mutedNotifications: db.mutedNotifications[user.id] });
   }),
 ];

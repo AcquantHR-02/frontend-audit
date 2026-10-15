@@ -42,10 +42,13 @@ interface NotificationInput {
 }
 
 /** Event notification for each recipient (skips the actor — nobody needs to hear about their own action). */
+/** Types the user switched off in Settings are never delivered. */
+const isMuted = (userId: string, type: string) => db.mutedNotifications[userId]?.includes(type) ?? false;
+
 export function notify(recipients: User[], input: NotificationInput, actorId?: string) {
   const createdAt = nowIso();
   for (const user of recipients) {
-    if (user.id === actorId) continue;
+    if (user.id === actorId || isMuted(user.id, input.type)) continue;
     db.notifications.unshift({ id: newId("ntf"), userId: user.id, createdAt, readAt: null, ...input });
   }
   trim();
@@ -79,6 +82,7 @@ export function syncScheduledNotifications(user: User) {
   const add = (key: string, createdAt: string, input: NotificationInput) => {
     const id = `sched:${key}:${user.id}`;
     if (existing.has(id) || createdAt.slice(0, 10) > today || createdAt.slice(0, 10) < since) return;
+    if (isMuted(user.id, input.type)) return;
     const old = daysBetween(createdAt.slice(0, 10), today) > AUTO_READ_AFTER_DAYS;
     due.push({ id, userId: user.id, createdAt, readAt: old ? createdAt : null, ...input });
   };

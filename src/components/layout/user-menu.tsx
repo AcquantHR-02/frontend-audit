@@ -6,6 +6,7 @@ import {
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
+  SettingsIcon,
   SunIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -111,6 +112,17 @@ function ProfileMenuContent({
       </div>
 
       <DropdownMenuSeparator />
+      <DropdownMenuItem asChild className="gap-3 py-2">
+        <Link href="/settings">
+          <span className="grid size-8 place-items-center rounded-md bg-accent text-primary">
+            <SettingsIcon aria-hidden />
+          </span>
+          <span className="flex flex-col">
+            <span className="font-medium">Settings</span>
+            <span className="text-xs text-muted-foreground">Profile and notifications</span>
+          </span>
+        </Link>
+      </DropdownMenuItem>
       <DropdownMenuItem asChild className="gap-3 py-2">
         <Link href="/change-password">
           <span className="grid size-8 place-items-center rounded-md bg-accent text-primary">
