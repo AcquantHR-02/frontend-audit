@@ -19,7 +19,8 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, description, badge, actions, icon, className }: PageHeaderProps) {
-  const pathname = usePathname();
+  // null outside the App Router (e.g. component tests).
+  const pathname = usePathname() ?? "";
   const Icon = icon === false ? null : (icon ?? findNavItem(pathname)?.item.icon ?? null);
 
   return (
