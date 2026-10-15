@@ -1,6 +1,7 @@
 # Audit System — Frontend Progress Log
 
 > Living document. Updated at the end of every step with what was done, decisions made, and what's next.
+> **New here?** Start with [README.md](./README.md): the full guide to the product, roles, the audit lifecycle, every screen and the business rules.
 > Source of truth for business rules: `Audit_System_Documentation_V6.docx` (spec V6, last updated 2026-10-08).
 
 ---
@@ -329,6 +330,11 @@ npm run lint && npm run typecheck
 - New `components/shared/active-filters.tsx`: `<FilterBar>` + `useActiveFilter` / `<FilterChip>`. Every active filter shows as a removable chip ("Phase: Published ×") under the filter row, with an "N active" count and **Clear all**.
 - Works on every list automatically: `FilterSelect` and the toolbar search register themselves; `DataTableToolbar` renders a `FilterBar`. Reports wraps its selects + date range in a `FilterBar` (date chips via `<FilterChip>`).
 - Chips sit outside the select triggers on purpose — an inline × inside a hover-to-open select would be swallowed by the opening list.
+
+### 2026-10-15 — Docs: full project guide
+
+- Rewrote **README.md** as a complete guide: quick start + demo accounts, glossary, role/permission matrix, the audit lifecycle end to end (setup → assignments → run wizard → windows → review → Window 2 → publish → findings → reporting), a screen-by-screen guide with every operation, business-rules reference (score, dates, phases, evidence, assignments, retention), common UI behaviour (URL filters, filter chips, scrolling tables, themes), mock backend, backend switch, stack, structure + conventions + "add a list page" recipe, scripts and troubleshooting.
+- `.gitignore` extended (Playwright output, logs, Windows/macOS files, editor folders, local Claude settings).
 
 ## 8. Status
 
