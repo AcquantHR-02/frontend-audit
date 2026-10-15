@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { usePageTitle } from "@/components/layout/page-title";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FileDropzone } from "@/components/shared/file-dropzone";
@@ -36,6 +37,7 @@ export function FindingDetailPage({ findingId }: { findingId: string }) {
   const canManage = useCan(Permission.FINDINGS_MANAGE);
   const canRemediate = useCan(Permission.FINDINGS_REMEDIATE);
   const { data: finding, error } = useGetFindingQuery(findingId);
+  usePageTitle(finding?.requirement);
 
   if ((error as ApiError | undefined)?.status === 404) {
     return (

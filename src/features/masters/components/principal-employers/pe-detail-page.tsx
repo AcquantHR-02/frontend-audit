@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { usePageTitle } from "@/components/layout/page-title";
 import { ActiveBadge } from "@/components/shared/active-badge";
 import {
   DataTable,
@@ -50,6 +51,7 @@ export function PrincipalEmployerDetailPage({ peId }: { peId: string }) {
   const canManage = useCan(Permission.MASTERS_MANAGE);
   const canCloseUnits = useCan(Permission.UNITS_CLOSE);
   const { data: pe, isLoading: peLoading, error } = useGetPrincipalEmployerQuery(peId);
+  usePageTitle(pe?.name);
 
   const table = useTableUrlState("code,asc");
   const [status, setStatus] = useUrlFilter("status", table.resetPage);

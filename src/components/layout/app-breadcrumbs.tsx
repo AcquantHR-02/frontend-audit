@@ -12,17 +12,19 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { findNavItem } from "@/config/navigation";
+import { useCurrentPageLabel } from "./page-title";
 
-/** Home › [Group] › Section, derived from the navigation config (detail pages extend this later). */
+/** Home › [Group] › Section › Entity, from the navigation config plus the detail page's own label. */
 export function AppBreadcrumbs() {
   const pathname = usePathname();
   const match = findNavItem(pathname);
+  const detailLabel = useCurrentPageLabel();
 
   const crumbs: { label: string; href?: string }[] = [{ label: "Home", href: "/overview" }];
   if (match && match.item.href !== "/overview") {
     if (match.group.label) crumbs.push({ label: match.group.label });
     crumbs.push({ label: match.item.title, href: pathname === match.item.href ? undefined : match.item.href });
-    if (pathname !== match.item.href) crumbs.push({ label: "Details" });
+    if (pathname !== match.item.href) crumbs.push({ label: detailLabel ?? "Details" });
   } else if (match) {
     crumbs.push({ label: match.item.title });
   }

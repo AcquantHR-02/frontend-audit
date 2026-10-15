@@ -336,6 +336,14 @@ npm run lint && npm run typecheck
 - Rewrote **README.md** as a complete guide: quick start + demo accounts, glossary, role/permission matrix, the audit lifecycle end to end (setup → assignments → run wizard → windows → review → Window 2 → publish → findings → reporting), a screen-by-screen guide with every operation, business-rules reference (score, dates, phases, evidence, assignments, retention), common UI behaviour (URL filters, filter chips, scrolling tables, themes), mock backend, backend switch, stack, structure + conventions + "add a list page" recipe, scripts and troubleshooting.
 - `.gitignore` extended (Playwright output, logs, Windows/macOS files, editor folders, local Claude settings).
 
+### 2026-10-15 — Extra: professional polish pass
+
+- **Bug fix:** form dialogs (every Add/Edit in Masters, Users…) had a footer bleeding 16 px outside the dialog — shadcn's `DialogFooter` uses negative margins sized for `p-4` content while `FormDialog` is `p-0`.
+- **Breadcrumbs + tab titles name the record** (`AR-2026-0067 · ASA`, PE name, finding requirement, "New audit run") via `components/layout/page-title.tsx` (`usePageTitle`), instead of a generic "Details".
+- **Empty filtered tables** show a **Clear filters** button (`ClearUrlFiltersButton`: drops filter/search params, keeps size + sort).
+- Thin theme-aware scrollbars, brand-tinted text selection, a 300 ms fade-in on route change (off for reduced motion).
+- Branded **404** page (wordmark, gradient 404, grid backdrop, overview / audit runs / sign-in links).
+
 ## 8. Status
 
 All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).

@@ -2,6 +2,7 @@
 
 import { FilterIcon, RotateCcwIcon, XIcon } from "lucide-react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -135,5 +136,36 @@ export function FilterBar({ children, trailing, className, rowClassName }: Filte
         )}
       </div>
     </FilterRegistryContext.Provider>
+  );
+}
+
+/** URL params that shape the view but aren't filters. */
+const VIEW_PARAMS = new Set(["page", "size", "sort"]);
+
+/**
+ * "Clear filters" for empty results: drops every filter/search param from the URL (keeps page
+ * size and sort). URL-based, so it works outside a <FilterBar>, e.g. inside the table body.
+ */
+export function ClearUrlFiltersButton({ className }: { className?: string }) {
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const active = params ? [...params.keys()].filter((key) => !VIEW_PARAMS.has(key)) : [];
+  if (active.length === 0) return null;
+
+  const clear = () => {
+    const kept = new URLSearchParams();
+    for (const key of ["size", "sort"]) {
+      const value = params?.get(key);
+      if (value) kept.set(key, value);
+    }
+    const query = kept.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={clear} className={className}>
+      <RotateCcwIcon aria-hidden /> Clear filters
+    </Button>
   );
 }

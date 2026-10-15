@@ -56,7 +56,8 @@ export function FormDialog({
             )}
             {children}
           </div>
-          <DialogFooter className="border-t px-6 py-3">
+          {/* shadcn's footer uses negative margins sized for p-4 content; this dialog is p-0. */}
+          <DialogFooter className="m-0 border-t px-6 py-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
               Cancel
             </Button>

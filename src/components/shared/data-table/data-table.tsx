@@ -10,6 +10,7 @@ import {
   type Updater,
 } from "@tanstack/react-table";
 import type { ReactNode } from "react";
+import { ClearUrlFiltersButton } from "@/components/shared/active-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -133,6 +134,10 @@ export function DataTable<TData extends RowData>({
             <TableRow className="hover:bg-transparent">
               <TableCell colSpan={columns.length} className="p-0">
                 {empty}
+                {/* Shown only when filters/search are active in the URL. */}
+                <div className="flex justify-center empty:hidden [&:has(button)]:-mt-6 [&:has(button)]:pb-8">
+                  <ClearUrlFiltersButton />
+                </div>
               </TableCell>
             </TableRow>
           ) : (

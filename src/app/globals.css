@@ -129,6 +129,8 @@
   --chart-4: oklch(0.72 0.13 75);
   --chart-5: oklch(0.58 0.19 27);
 
+  --scrollbar: oklch(0.82 0.014 258);
+
   /* Dashboard welcome banner */
   --hero-gradient: linear-gradient(120deg, #0c2656 0%, #314f8b 60%, #1a86b5 100%);
 
@@ -197,6 +199,7 @@
   --chart-5: oklch(0.7 0.17 25);
 
   --hero-gradient: linear-gradient(120deg, #101c38 0%, #172c5a 55%, #154a73 100%);
+  --scrollbar: oklch(0.36 0.014 260);
 
   /* Slate like the rest of the dark UI — one step above the page, separated by a hairline border */
   --sidebar: oklch(0.18 0.014 260);
@@ -224,6 +227,17 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+  /* Thin, theme-aware scrollbars (tables, drawers, sidebar) instead of the chunky OS default */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar) transparent;
+  }
+  [data-slot="sidebar-content"] {
+    scrollbar-color: oklch(1 0 0 / 18%) transparent;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
   }
 }
 

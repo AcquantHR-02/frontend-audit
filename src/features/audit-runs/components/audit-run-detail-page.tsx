@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { usePageTitle } from "@/components/layout/page-title";
 import { DataTable, type DataTableColumn } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { KpiCard } from "@/components/shared/kpi-card";
@@ -193,6 +194,8 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
       return true;
     });
   }, [items, search, tab, isParty, run]);
+
+  usePageTitle(run && `${run.code} · ${run.partyName}`);
 
   if ((error as ApiError | undefined)?.status === 404) {
     return (

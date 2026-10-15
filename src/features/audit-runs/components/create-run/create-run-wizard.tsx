@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { usePageTitle } from "@/components/layout/page-title";
 import { PageHeader } from "@/components/shared/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const withSuggestions = (p: { activityPeriodStart: string; activityPeriodEnd: st
 });
 
 export function CreateRunWizard() {
+  usePageTitle("New audit run");
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [scope, setScope] = useState<Scope>({

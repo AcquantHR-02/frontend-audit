@@ -345,6 +345,8 @@ its dates) → `Auditor review` (after Window 1 ends, or started early) → `Win
   Sorting and paging happen on the server.
 - **Filters and search are kept in the URL** (`?phase=REVIEW&search=ja`). A filtered view can be
   bookmarked or shared, and survives refresh and back/forward.
+- **Breadcrumbs and browser-tab titles name the record** on detail pages (e.g. `AR-2026-0067 · ASA`).
+- **Empty results** offer a **Clear filters** button (keeps page size and sort).
 - **Active filters show as chips** under the filter row, e.g. `Phase: Published ×`, with an
   "N active" count and **Clear all**. Click × to remove one filter.
 - **Select boxes open on hover** (mouse); click, keyboard and touch work as usual.
