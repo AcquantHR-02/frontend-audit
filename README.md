@@ -379,6 +379,19 @@ its dates) → `Auditor review` (after Window 1 ends, or started early) → `Win
 - **Active filters show as chips** under the filter row, e.g. `Phase: Published ×`, with an
   "N active" count and **Clear all**. Click × to remove one filter.
 - **Select boxes open on hover** (mouse); click, keyboard and touch work as usual.
+- **Global search**: `Ctrl+K` (or `/`) searches runs, findings, vendors, Principal Employers, users
+  (admins) and pages — only what you are allowed to see.
+- **Views** (audit runs, findings): suggested presets such as _Awaiting auditor review_ or _Open over
+  60 days_, plus your own saved views of the current filters, search and sort.
+- **Export CSV** on every list downloads all rows matching the current filters, not just the page.
+- **File preview**: click a file chip to view PDFs and images in the app; the arrow downloads it.
+- **Bulk stamping** (auditors, review phases): tick items in a run, then _Stamp as_ in the floating
+  bar. One-time items with evidence are skipped because they need their own valid-to date.
+- **Review shortcuts** in the item drawer: `J`/`K` next/previous, `C`/`A`/`N` status, `R` remarks,
+  `Ctrl+Enter` save & next.
+- **Scorecards**: click a vendor or PE name (reports, dashboard, vendors list) for its track record.
+- **Settings** (profile menu): change your display name and password, theme, and which in-app
+  notifications you receive.
 - **Light / dark theme** from the profile menu, or follow the system setting.
 - **Responsive**: phone, tablet and desktop. Secondary table columns hide on small screens.
 - **Status is never colour-only**: badges have a dot + text, and charts have labels.
@@ -396,7 +409,8 @@ its dates) → `Auditor review` (after Window 1 ends, or started early) → `Win
 - The demo includes Veero Metals with 10 units, 19 vendors, 14 Acts, vendor and PE checklists,
   published July 2026 runs for every vendor–unit pair, May/June history for trends, runs in progress,
   and findings.
-- Uploaded files are kept only for the current browser session.
+- Uploaded files are stored in the browser's IndexedDB and served by the mock at `GET /files/:id`;
+  seeded evidence opens as generated sample PDFs and photos.
 - `src/mocks/handlers/*.ts` is an **executable specification** of the API the backend must provide.
 
 ---

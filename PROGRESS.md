@@ -123,6 +123,8 @@ audit-frontend/
 | 2026-10-14 | `as const` objects instead of TS `enum`                | JSON-compatible, tree-shakeable                                    |
 | 2026-10-14 | Score rounding with integer arithmetic                 | Exact half-up at .x5 boundaries (no float error)                   |
 | 2026-10-14 | Kept shadcn's new `cn` package (dropped clsx/twMerge)  | Official shadcn default; verified publisher; avoid duplicates      |
+| 2026-10-15 | Files downloaded via the API with the token (Blob)     | Works with bearer auth; backend may instead return signed URLs     |
+| 2026-10-15 | Bulk stamp skips items needing valid-to, doesn't fail  | One status + remark can't carry per-item certificate dates         |
 
 ## 6. Open Questions (for backend teammate)
 
@@ -358,6 +360,20 @@ npm run lint && npm run typecheck
 - **Mock backend**: `mocks/notifications.ts` — event notifications pushed from the upload, remediation and finding-status handlers (never to the actor); date-driven ones materialised on read with stable ids (created exactly once; older than 10 days arrive read; never time-stamped in the future). DB v8.
 - `AppHeader` takes the bell as a slot (layout must not import features); old placeholder `notifications-button.tsx` removed.
 - **Tests: 75 passing** (+ vendor scoping and no duplicates, finding-resolved notification with read / read-all).
+
+### 2026-10-15 — Extra: productivity & everyday features (B + C)
+
+- **Bulk stamping**: checkbox column in the run workspace (auditor, review phases) → floating bar → stamp N items Complied / NA / Not complied with one remark. ONE_TIME items with evidence are skipped (they need their own valid-to). `POST /audit-runs/:id/bulk-review` → `{ stamped, skipped }`.
+- **Keyboard review**: drawer prev/next (`J`/`K`, buttons, "Item 4 of 35"), `C`/`A`/`N` status, `R` remarks, `Ctrl+Enter` save & next; suggested remark chips per status.
+- **File preview**: evidence and remediation files open in a viewer (PDF, image, text; ←/→ between files; download). Files are fetched through the API with the access token (`store/fetch-file.ts`). Mock stores uploads in IndexedDB and serves `GET /files/:id` with the run/finding visibility rules. Demo runs now ship with evidence (sample PDFs + register photos) — so carry-forward also shows up in new runs.
+- **Scorecards**: `/reports/vendors/:id` and `/reports/principal-employers/:id` (`GET /reports/scorecard`): latest vs previous score, overall, open findings + oldest age, trend, NC by Act, units, repeat non-compliance, audit history. Linked from reports, dashboard, vendors master, PE detail, run page; party users get "My scorecard".
+- **CSV export** on runs, findings, users, vendors, PEs, audit trail: all rows matching filters (paged fetch, 10k cap), RFC 4180, BOM, formula-injection safe.
+- **Global search** (`Ctrl+K` or `/`): runs, findings, vendors, PEs, users (admin) and pages; permission-scoped `GET /search`.
+- **Saved views**: "Views" menu on runs and findings — suggested presets + personal views (`/me/views`). Findings gained an **Age** filter (`minAgeDays`).
+- **Settings** (`/settings`, profile menu): display name (`PATCH /me`), change password, theme, per-type notification switches (`/me/preferences`; muted types are never delivered).
+- **Dashboard motion**: hero at-a-glance stats, count-up numbers, growing ring/bars/meters, staggered section entrance; all respect reduced motion.
+- Shared: `components/shared/{charts,panel,file-preview,export-csv-button,animated-number}`, `hooks/use-motion.ts`, `lib/export/csv.ts`, `lib/domain/links.ts`. DB v10.
+- **Tests: 92 passing** (+ bulk stamp, files, scorecard, CSV, search, saved views, settings).
 
 ## 8. Status
 
