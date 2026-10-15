@@ -49,7 +49,7 @@ export function KpiCard({ label, value, hint, tone, icon, href, progress, classN
         {icon && (
           <span
             className={cn(
-              "grid size-8 shrink-0 place-items-center rounded-lg [&_svg]:size-4",
+              "hidden size-8 shrink-0 place-items-center rounded-lg min-[480px]:grid [&_svg]:size-4",
               chipTone[tone ?? "primary"],
             )}
           >

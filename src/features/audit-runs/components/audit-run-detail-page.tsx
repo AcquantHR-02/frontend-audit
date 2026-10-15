@@ -3,9 +3,15 @@
 import {
   ArrowLeftIcon,
   CheckIcon,
+  CircleCheckIcon,
+  CircleSlashIcon,
+  CircleXIcon,
   ClipboardCheckIcon,
   FileSpreadsheetIcon,
+  GaugeIcon,
+  InboxIcon,
   InfoIcon,
+  ListChecksIcon,
   LockIcon,
   SearchIcon,
 } from "lucide-react";
@@ -107,26 +113,50 @@ function PhaseTimeline({ run }: { run: AuditRunView }) {
     PUBLISHED: run.publishedAt ? formatDate(run.publishedAt) : undefined,
   };
   return (
-    <ol className="grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label="Run phases">
-      {timeline.map((step) => {
+    <ol
+      className="grid grid-cols-2 gap-y-4 rounded-xl border bg-card px-4 py-4 shadow-xs sm:grid-cols-5 sm:px-5"
+      aria-label="Run phases"
+    >
+      {timeline.map((step, i) => {
         const index = order.indexOf(step.phase);
         const done = index < current || (step.phase === "PUBLISHED" && run.phase === "PUBLISHED");
-        const active = step.phase === run.phase;
+        const active = step.phase === run.phase && run.phase !== "PUBLISHED";
+        const skipped = step.phase === "WINDOW_2" && skippedW2;
         return (
           <li
             key={step.phase}
-            className={cn(
-              "rounded-lg border bg-card px-3 py-2",
-              active && "border-primary ring-1 ring-primary",
-              step.phase === "WINDOW_2" && skippedW2 && "opacity-60",
-            )}
+            className={cn("relative flex items-start gap-2.5 pr-2", skipped && "opacity-60")}
             aria-current={active ? "step" : undefined}
           >
-            <div className="flex items-center gap-1.5 text-[13px] font-medium">
-              {done && <CheckIcon className="size-3.5 text-success" aria-hidden />}
-              {step.label}
-            </div>
-            <div className="text-xs text-muted-foreground tabular">{dates[step.phase] ?? " "}</div>
+            {/* Connector to the next step (desktop row only). */}
+            {i < timeline.length - 1 && (
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute top-3.5 right-0 left-10 hidden h-0.5 rounded-full sm:block",
+                  done ? "bg-success/60" : "bg-border",
+                )}
+              />
+            )}
+            <span
+              className={cn(
+                "relative z-10 grid size-7 shrink-0 place-items-center rounded-full border-2 text-xs font-semibold tabular ring-4 ring-card",
+                done && "border-success bg-success text-white",
+                active && "border-primary bg-primary text-primary-foreground shadow-[0_0_0_4px] shadow-primary/20",
+                !done && !active && "border-border bg-card text-muted-foreground",
+              )}
+            >
+              {done ? <CheckIcon className="size-3.5" aria-hidden /> : i + 1}
+            </span>
+            <span className="relative z-10 min-w-0 bg-card pr-2">
+              <span className={cn("block text-[13px] font-medium", active && "text-primary")}>{step.label}</span>
+              <span className="block text-xs text-muted-foreground tabular">
+                {active ? "Current phase" : (dates[step.phase] ?? (done ? "Done" : "Upcoming"))}
+              </span>
+              {active && dates[step.phase] && (
+                <span className="block text-xs text-muted-foreground tabular">{dates[step.phase]}</span>
+              )}
+            </span>
           </li>
         );
       })}
@@ -206,17 +236,19 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
       {isParty && <PartyBanner run={run} />}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Items" value={run.score.assignedTotal} />
-        <KpiCard label="Submitted" value={submitted} hint="awaiting stamp" />
-        <KpiCard label="Complied" value={run.score.complied} tone="success" />
-        <KpiCard label="Not applicable" value={run.score.notApplicable} />
+        <KpiCard label="Items" icon={<ListChecksIcon />} value={run.score.assignedTotal} />
+        <KpiCard label="Submitted" icon={<InboxIcon />} value={submitted} hint="awaiting stamp" />
+        <KpiCard label="Complied" icon={<CircleCheckIcon />} value={run.score.complied} tone="success" />
+        <KpiCard label="Not applicable" icon={<CircleSlashIcon />} value={run.score.notApplicable} />
         <KpiCard
           label="Not complied"
+          icon={<CircleXIcon />}
           value={run.score.notComplied}
           tone={run.score.notComplied ? "danger" : undefined}
         />
         <KpiCard
           label="Score"
+          icon={<GaugeIcon />}
           value={formatScore(run.score)}
           tone="primary"
           hint={`${run.score.pending} not stamped`}

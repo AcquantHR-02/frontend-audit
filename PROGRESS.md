@@ -310,6 +310,15 @@ npm run lint && npm run typecheck
 - **Login:** fixed-height split screen — the page never scrolls (hero image / highlights hide on short screens); form in an elevated card with soft brand glow; "Welcome back" copy; compact demo-account chips; wordmark turns white in dark mode; trust note under the card.
 - Verified by screenshots (light/dark, 1440×900, 1366×768, 390×700) plus type-check, lint and tests.
 
+### 2026-10-15 — Extra: app-wide UI polish
+
+- **Page headers** show the matching sidebar icon in a tinted tile on every screen (auto from `config/navigation.ts`; `icon={false}` hides it).
+- **KPI cards** everywhere (findings, reports, retention, run workspace, PE detail) get tinted icon chips (hidden under 480 px to save room).
+- **Run workspace phase timeline** is now a connected stepper: green check for done phases, highlighted current phase, numbered upcoming phases with connector lines.
+- **New-run wizard** stepper: full-width card with filled/checked steps and progress connectors; only the current label shows on phones.
+- Findings table height accounts for its KPI row so pagination stays on screen.
+- Checked: the dev overlay's "1 Issue" is Next 16's dev-only instant-navigation validation notice, not an app error.
+
 ## 8. Status
 
 All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).

@@ -1,6 +1,15 @@
 "use client";
 
-import { ChevronRightIcon, FileBarChart2Icon, FileSpreadsheetIcon, Loader2Icon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  CircleCheckIcon,
+  CircleXIcon,
+  FileBarChart2Icon,
+  FileCheck2Icon,
+  FileSpreadsheetIcon,
+  GaugeIcon,
+  Loader2Icon,
+} from "lucide-react";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -130,14 +139,26 @@ export function ReportsPage() {
 
       {data && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <KpiCard label="Published runs" value={formatCount(data.runCount)} />
-          <KpiCard label="Complied" value={formatCount(data.total.complied)} tone="success" />
+          <KpiCard label="Published runs" icon={<FileCheck2Icon />} value={formatCount(data.runCount)} />
+          <KpiCard
+            label="Complied"
+            icon={<CircleCheckIcon />}
+            value={formatCount(data.total.complied)}
+            tone="success"
+          />
           <KpiCard
             label="Not complied"
+            icon={<CircleXIcon />}
             value={formatCount(data.total.notComplied)}
             tone={data.total.notComplied ? "danger" : undefined}
           />
-          <KpiCard label="Overall score" value={formatScore(data.total)} tone="primary" hint={periodLabel} />
+          <KpiCard
+            label="Overall score"
+            icon={<GaugeIcon />}
+            value={formatScore(data.total)}
+            tone="primary"
+            hint={periodLabel}
+          />
         </div>
       )}
 

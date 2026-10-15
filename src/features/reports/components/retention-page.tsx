@@ -1,6 +1,13 @@
 "use client";
 
-import { AlertTriangleIcon, ArchiveIcon, InfoIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  ArchiveIcon,
+  BellRingIcon,
+  CalendarClockIcon,
+  InfoIcon,
+  ListChecksIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { KpiCard } from "@/components/shared/kpi-card";
@@ -40,16 +47,28 @@ export function RetentionPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KpiCard
           label="Next purge"
+          icon={<CalendarClockIcon />}
           value={<span className="text-lg">{formatDate(purgeDate)}</span>}
           hint={`in ${daysUntil(today, purgeDate)} days`}
         />
-        <KpiCard label="Removes" value={<span className="text-lg">{fyLabel(cutoff)}</span>} hint="and earlier" />
+        <KpiCard
+          label="Removes"
+          icon={<ArchiveIcon />}
+          value={<span className="text-lg">{fyLabel(cutoff)}</span>}
+          hint="and earlier"
+        />
         <KpiCard
           label="Runs scheduled"
+          icon={<ListChecksIcon />}
           value={isLoading ? "—" : eligible.length}
           tone={eligible.length ? "warning" : undefined}
         />
-        <KpiCard label="Notices" value={<span className="text-lg">30 + 7 days</span>} hint="before the purge" />
+        <KpiCard
+          label="Notices"
+          icon={<BellRingIcon />}
+          value={<span className="text-lg">30 + 7 days</span>}
+          hint="before the purge"
+        />
       </div>
       <Alert>
         <InfoIcon />

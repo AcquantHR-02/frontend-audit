@@ -151,22 +151,34 @@ export function CreateRunWizard() {
         description="One run covers one audited party at one unit for one activity period."
       />
 
-      <ol className="flex flex-wrap items-center gap-2" aria-label="Steps">
+      <ol className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 shadow-xs sm:px-5" aria-label="Steps">
         {STEPS.map((label, i) => (
-          <li key={label} className="flex items-center gap-2">
+          <li key={label} className={cn("flex items-center gap-2", i < STEPS.length - 1 && "flex-1")}>
             <span
               className={cn(
-                "flex size-6 items-center justify-center rounded-full border text-xs font-semibold",
-                i < step && "border-primary bg-primary text-primary-foreground",
-                i === step && "border-primary text-primary",
-                i > step && "text-muted-foreground",
+                "grid size-7 shrink-0 place-items-center rounded-full border-2 text-xs font-semibold transition-colors",
+                i < step && "border-success bg-success text-white",
+                i === step && "border-primary bg-primary text-primary-foreground shadow-[0_0_0_4px] shadow-primary/20",
+                i > step && "border-border text-muted-foreground",
               )}
               aria-current={i === step ? "step" : undefined}
             >
               {i < step ? <CheckIcon className="size-3.5" /> : i + 1}
             </span>
-            <span className={cn("text-[13px]", i === step ? "font-medium" : "text-muted-foreground")}>{label}</span>
-            {i < STEPS.length - 1 && <span className="mx-1 h-px w-6 bg-border" aria-hidden />}
+            <span
+              className={cn(
+                "text-[13px] whitespace-nowrap",
+                i === step ? "font-medium text-foreground" : "hidden text-muted-foreground sm:inline",
+              )}
+            >
+              {label}
+            </span>
+            {i < STEPS.length - 1 && (
+              <span
+                aria-hidden
+                className={cn("mx-1 h-0.5 min-w-4 flex-1 rounded-full", i < step ? "bg-success/60" : "bg-border")}
+              />
+            )}
           </li>
         ))}
       </ol>

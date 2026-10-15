@@ -2,7 +2,10 @@
 
 import {
   ArrowLeftIcon,
+  Building2Icon,
   BuildingIcon,
+  CircleCheckIcon,
+  CircleSlashIcon,
   DoorClosedIcon,
   DoorOpenIcon,
   MapPinIcon,
@@ -182,9 +185,9 @@ export function PrincipalEmployerDetailPage({ peId }: { peId: string }) {
       )}
 
       <div className="grid grid-cols-3 gap-3 sm:max-w-xl">
-        <KpiCard label="Units" value={pe?.unitCount ?? "—"} />
-        <KpiCard label="Operational" value={pe?.openUnitCount ?? "—"} />
-        <KpiCard label="Closed" value={pe ? closedCount : "—"} />
+        <KpiCard label="Units" icon={<Building2Icon />} value={pe?.unitCount ?? "—"} />
+        <KpiCard label="Operational" icon={<CircleCheckIcon />} value={pe?.openUnitCount ?? "—"} />
+        <KpiCard label="Closed" icon={<CircleSlashIcon />} value={pe ? closedCount : "—"} />
       </div>
 
       <section className="flex flex-col gap-3" aria-labelledby="units-heading">

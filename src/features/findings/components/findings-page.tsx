@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldAlertIcon } from "lucide-react";
+import { CircleAlertIcon, CircleCheckIcon, InboxIcon, ShieldAlertIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   DataTable,
@@ -105,10 +105,20 @@ export function FindingsPage() {
             : "Items found not complied in your published audits. Upload remediation evidence for open findings."
         }
       />
-      <div className="grid grid-cols-3 gap-3 sm:max-w-2xl">
-        <KpiCard label="Open" value={summary?.open ?? "—"} tone={summary?.open ? "danger" : undefined} />
-        <KpiCard label="Remediation submitted" value={summary?.awaitingReview ?? "—"} tone="warning" />
-        <KpiCard label="Resolved" value={summary?.resolved ?? "—"} tone="success" />
+      <div className="grid grid-cols-3 gap-3 lg:max-w-3xl">
+        <KpiCard
+          label="Open"
+          icon={<CircleAlertIcon />}
+          value={summary?.open ?? "—"}
+          tone={summary?.open ? "danger" : undefined}
+        />
+        <KpiCard
+          label="Remediation submitted"
+          icon={<InboxIcon />}
+          value={summary?.awaitingReview ?? "—"}
+          tone="warning"
+        />
+        <KpiCard label="Resolved" icon={<CircleCheckIcon />} value={summary?.resolved ?? "—"} tone="success" />
       </div>
       <div className="flex flex-col gap-3">
         <DataTableToolbar
@@ -123,6 +133,8 @@ export function FindingsPage() {
           }
         />
         <DataTable
+          // Leaves room for the KPI row above so pagination stays on screen.
+          maxHeightClassName="max-h-[max(20rem,calc(100dvh-29rem))]"
           columns={columns}
           data={data?.content}
           getRowId={(f) => f.id}
