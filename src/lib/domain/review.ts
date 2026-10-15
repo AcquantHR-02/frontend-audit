@@ -42,6 +42,19 @@ export function validateEvidence(input: {
 /** §9 / §6 Step 3b — validTo is mandatory for ONE_TIME items that have an evidence record. */
 export const needsValidTo = (cadence: Cadence, hasEvidence: boolean) => cadence === "ONE_TIME" && hasEvidence;
 
+/** Upper bound for one bulk stamp request. */
+export const MAX_BULK_STAMP = 200;
+
+/**
+ * Bulk stamping applies one status + one remark to many items. ONE_TIME items with evidence
+ * need their own certificate valid-to date, so they're left for individual review.
+ */
+export function bulkStampBlocker(air: Pick<AuditItemResult, "cadenceSnapshot">, hasEvidence: boolean): string | null {
+  return needsValidTo(air.cadenceSnapshot, hasEvidence)
+    ? "Needs a certificate valid-to date, so stamp it individually."
+    : null;
+}
+
 /** §4 — end-of-Review evaluation: Window 2 is required if anything is pending or not complied. */
 export function evaluateEndOfReview(airs: Pick<AuditItemResult, "complianceStatus">[]) {
   const pending = airs.filter((a) => a.complianceStatus === null).length;

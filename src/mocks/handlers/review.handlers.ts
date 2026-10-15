@@ -2,17 +2,19 @@ import { http, HttpResponse } from "msw";
 import { can, Permission } from "@/lib/auth";
 import {
   addDays,
+  bulkStampBlocker,
   canAuditorStamp,
   canAuditorUpload,
   canPartyUpload,
   deriveRunPhase,
   evaluateEndOfReview,
+  MAX_BULK_STAMP,
   needsValidTo,
   publishCheck,
   resolveCoveringVersion,
   validateEvidence,
 } from "@/lib/domain";
-import type { AuditRun, ComplianceStatus, EvidenceRecord, StoredFile, User } from "@/types/domain";
+import type { AuditItemResult, AuditRun, ComplianceStatus, EvidenceRecord, StoredFile, User } from "@/types/domain";
 import { logEvent } from "../audit-log";
 import { auditorRecipients, notify } from "../notifications";
 import { requireUser } from "../crud";
@@ -33,6 +35,21 @@ function loadAir(id: unknown) {
   const air = db.airs.find((a) => a.id === id);
   const run = air && db.auditRuns.find((r) => r.id === air.runId);
   return air && run ? { air, run } : null;
+}
+
+const latestEvidence = (airId: string) =>
+  db.evidence
+    .filter((e) => e.airId === airId && e.isActive)
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
+
+function applyStamp(air: AuditItemResult, user: User, complianceStatus: ComplianceStatus, auditRemarks: string) {
+  Object.assign(air, {
+    complianceStatus,
+    auditRemarks: auditRemarks.trim(),
+    submissionStatus: "REVIEWED",
+    updatedAt: nowIso(),
+    updatedBy: user.id,
+  });
 }
 
 function touch(run: AuditRun, user: User) {
@@ -178,22 +195,14 @@ export const reviewHandlers = [
     const errors: Record<string, string> = {};
     if (!STATUSES.includes(body.complianceStatus)) errors.complianceStatus = "Select a status";
     if (!body.auditRemarks?.trim()) errors.auditRemarks = "Audit remarks are required for every item";
-    const latest = db.evidence
-      .filter((e) => e.airId === air.id && e.isActive)
-      .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
+    const latest = latestEvidence(air.id);
     if (needsValidTo(air.cadenceSnapshot, !!latest) && !body.validTo)
       errors.validTo = "Enter the certificate's valid-to date";
     if (Object.keys(errors).length) {
       return errorResponse(400, Object.values(errors)[0], { code: "VALIDATION_FAILED", fieldErrors: errors });
     }
     if (latest && needsValidTo(air.cadenceSnapshot, true)) latest.validTo = body.validTo!;
-    Object.assign(air, {
-      complianceStatus: body.complianceStatus,
-      auditRemarks: body.auditRemarks.trim(),
-      submissionStatus: "REVIEWED",
-      updatedAt: nowIso(),
-      updatedBy: user.id,
-    });
+    applyStamp(air, user, body.complianceStatus, body.auditRemarks);
     logEvent(
       user,
       "ITEM_STAMPED",
@@ -203,6 +212,64 @@ export const reviewHandlers = [
     );
     persist();
     return HttpResponse.json(air);
+  }),
+
+  /**
+   * Bulk stamp: one status + one remark on many items of a run. Items that need a per-item
+   * valid-to date are skipped (and reported) rather than failing the whole request.
+   */
+  http.post(apiUrl("/audit-runs/:id/bulk-review"), async ({ request, params }) => {
+    await networkDelay();
+    const user = requireUser(request, Permission.AUDIT_RUNS_REVIEW);
+    if (user instanceof Response) return user;
+    const run = db.auditRuns.find((r) => r.id === params.id);
+    if (!run) return errorResponse(404, "Audit run not found.");
+    if (!canAuditorStamp(phaseOf(run))) {
+      return errorResponse(409, "Items can be stamped only during review.", { code: "NOT_IN_REVIEW" });
+    }
+    const body = (await request.json()) as {
+      airIds?: string[];
+      complianceStatus: ComplianceStatus;
+      auditRemarks: string;
+    };
+    const ids = [...new Set(body.airIds ?? [])];
+    const errors: Record<string, string> = {};
+    if (ids.length === 0) errors.airIds = "Select at least one item";
+    if (ids.length > MAX_BULK_STAMP) errors.airIds = `Stamp at most ${MAX_BULK_STAMP} items at a time`;
+    if (!STATUSES.includes(body.complianceStatus)) errors.complianceStatus = "Select a status";
+    if (!body.auditRemarks?.trim()) errors.auditRemarks = "Audit remarks are required for every item";
+    if (Object.keys(errors).length) {
+      return errorResponse(400, Object.values(errors)[0], { code: "VALIDATION_FAILED", fieldErrors: errors });
+    }
+
+    const stamped: string[] = [];
+    const skipped: { airId: string; reason: string }[] = [];
+    for (const id of ids) {
+      const air = db.airs.find((a) => a.id === id && a.runId === run.id);
+      if (!air) {
+        skipped.push({ airId: id, reason: "Not an item of this run." });
+        continue;
+      }
+      const blocker = bulkStampBlocker(air, !!latestEvidence(air.id));
+      if (blocker) {
+        skipped.push({ airId: id, reason: blocker });
+        continue;
+      }
+      applyStamp(air, user, body.complianceStatus, body.auditRemarks);
+      stamped.push(id);
+    }
+    if (stamped.length) {
+      logEvent(
+        user,
+        "ITEMS_BULK_STAMPED",
+        "AuditRun",
+        run.id,
+        `${run.code}: stamped ${stamped.length} item(s) ${body.complianceStatus}${skipped.length ? `, ${skipped.length} skipped` : ""}`,
+      );
+      touch(run, user);
+      persist();
+    }
+    return HttpResponse.json({ stamped, skipped });
   }),
 
   /* ---------- Phase transitions (§4) ---------- */

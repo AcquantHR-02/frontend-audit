@@ -18,6 +18,7 @@ const actions: { value: string; label: string; tone: StatusTone }[] = [
   { value: "EVIDENCE_UPLOADED", label: "Evidence uploaded", tone: "info" },
   { value: "NA_PROPOSED", label: "NA proposed", tone: "neutral" },
   { value: "ITEM_STAMPED", label: "Item stamped", tone: "primary" },
+  { value: "ITEMS_BULK_STAMPED", label: "Items bulk stamped", tone: "primary" },
   { value: "REVIEW_STARTED", label: "Review started", tone: "warning" },
   { value: "WINDOW2_OPENED", label: "Window 2 opened", tone: "warning" },
   { value: "WINDOW2_CLOSED", label: "Window 2 closed", tone: "warning" },

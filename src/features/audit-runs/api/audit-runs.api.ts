@@ -58,6 +58,18 @@ export interface ReviewRequest {
   validTo?: string | null;
 }
 
+export interface BulkReviewRequest {
+  runId: string;
+  airIds: string[];
+  complianceStatus: ComplianceStatus;
+  auditRemarks: string;
+}
+
+export interface BulkReviewResult {
+  stamped: string[];
+  skipped: { airId: string; reason: string }[];
+}
+
 export type AuditRunListParams = PageRequest & { auditType?: AuditType; phase?: RunPhase };
 
 export const auditRunsApi = baseApi.injectEndpoints({
@@ -113,6 +125,15 @@ export const auditRunsApi = baseApi.injectEndpoints({
         { type: "AuditRun", id: "LIST" },
       ],
     }),
+    bulkReview: build.mutation<BulkReviewResult, BulkReviewRequest>({
+      query: ({ runId, ...body }) => ({ url: `/audit-runs/${runId}/bulk-review`, method: "POST", body }),
+      invalidatesTags: (_r, _e, { runId }) => [
+        "Evidence",
+        { type: "AuditItem", id: `run:${runId}` },
+        { type: "AuditRun", id: runId },
+        { type: "AuditRun", id: "LIST" },
+      ],
+    }),
     startReview: build.mutation<AuditRunView, string>({
       query: (runId) => ({ url: `/audit-runs/${runId}/start-review`, method: "POST" }),
       invalidatesTags: (_r, _e, runId) => [
@@ -160,6 +181,7 @@ export const {
   useGetAirEvidenceQuery,
   useUploadEvidenceMutation,
   useReviewAirMutation,
+  useBulkReviewMutation,
   useStartReviewMutation,
   useEndReviewMutation,
   useCloseWindow2Mutation,

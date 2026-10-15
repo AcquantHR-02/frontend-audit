@@ -16,7 +16,7 @@ import {
   SearchIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePageTitle } from "@/components/layout/page-title";
 import { DataTable, type DataTableColumn } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -28,14 +28,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import { useCan, useCurrentUser } from "@/hooks/use-current-user";
+import { Permission } from "@/lib/auth";
 import { exportRunReport } from "@/lib/export/excel";
-import { cadenceMeta, canPartyUpload, complianceMeta, formatScore, runPhaseMeta, submissionMeta } from "@/lib/domain";
+import {
+  cadenceMeta,
+  canAuditorStamp,
+  canPartyUpload,
+  complianceMeta,
+  formatScore,
+  runPhaseMeta,
+  submissionMeta,
+} from "@/lib/domain";
 import { cn, formatDate, formatDateRange } from "@/lib/utils";
 import type { ApiError } from "@/types/api";
 import type { AuditItemResult, AuditRunView, RunPhase } from "@/types/domain";
 import { useGetAuditRunQuery, useGetRunItemsQuery } from "../api/audit-runs.api";
-import { AirDrawer } from "./workspace/air-drawer";
+import { AirDrawer, type DrawerNav } from "./workspace/air-drawer";
+import { BulkStampBar } from "./workspace/bulk-stamp";
 import { PhaseActions } from "./workspace/phase-actions";
 
 type Tab = "all" | "action" | "submitted" | "stamped";
@@ -173,6 +183,11 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [openAirId, setOpenAirId] = useState<string | null>(null);
+  // Order the drawer steps through: the list as it was when the item was opened, so stamping
+  // an item out of the current tab doesn't reshuffle prev/next.
+  const [navOrder, setNavOrder] = useState<string[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const canReview = useCan(Permission.AUDIT_RUNS_REVIEW);
 
   const isParty =
     !!run &&
@@ -197,6 +212,22 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
 
   usePageTitle(run && `${run.code} · ${run.partyName}`);
 
+  const canBulkStamp = !!run && !isParty && canReview && canAuditorStamp(run.phase);
+  const openItem = useCallback(
+    (air: AuditItemResult) => {
+      setNavOrder(filtered.map((i) => i.id));
+      setOpenAirId(air.id);
+    },
+    [filtered],
+  );
+  const selection = useMemo(
+    () =>
+      canBulkStamp
+        ? { selected, onChange: setSelected, rowLabel: (air: AuditItemResult) => air.descriptionSnapshot }
+        : undefined,
+    [canBulkStamp, selected],
+  );
+
   if ((error as ApiError | undefined)?.status === 404) {
     return (
       <EmptyState
@@ -210,6 +241,17 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
 
   const submitted = items?.filter((i) => i.submissionStatus === "SUBMITTED").length ?? 0;
   const openAir = items?.find((i) => i.id === openAirId) ?? null;
+  const navIndex = openAirId ? navOrder.indexOf(openAirId) : -1;
+  const nav: DrawerNav | undefined =
+    navIndex === -1
+      ? undefined
+      : {
+          index: navIndex,
+          total: navOrder.length,
+          onPrev: navIndex > 0 ? () => setOpenAirId(navOrder[navIndex - 1]) : undefined,
+          onNext: navIndex < navOrder.length - 1 ? () => setOpenAirId(navOrder[navIndex + 1]) : undefined,
+        };
+  const selectedItems = canBulkStamp ? (items ?? []).filter((i) => selected.has(i.id)) : [];
 
   return (
     <>
@@ -258,7 +300,8 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
         />
       </div>
 
-      <div className="flex flex-col gap-3">
+      {/* Room for the floating bulk-action bar so it never covers the last rows. */}
+      <div className={cn("flex flex-col gap-3", selectedItems.length > 0 && "pb-16")}>
         <div className="flex flex-wrap items-center gap-2">
           <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="max-w-full overflow-x-auto">
             <TabsList>
@@ -287,7 +330,8 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
           data={filtered}
           getRowId={(i) => i.id}
           isLoading={isLoading}
-          onRowClick={(air) => setOpenAirId(air.id)}
+          onRowClick={openItem}
+          selection={selection}
           empty={
             <EmptyState
               icon={ClipboardCheckIcon}
@@ -299,7 +343,8 @@ export function AuditRunDetailPage({ runId }: { runId: string }) {
         />
       </div>
 
-      <AirDrawer run={run} air={openAir} isParty={isParty} onClose={() => setOpenAirId(null)} />
+      <AirDrawer run={run} air={openAir} isParty={isParty} nav={nav} onClose={() => setOpenAirId(null)} />
+      {!openAir && <BulkStampBar runId={run.id} selected={selectedItems} onClear={() => setSelected(new Set())} />}
     </>
   );
 }

@@ -9,8 +9,9 @@ import {
   type SortingState,
   type Updater,
 } from "@tanstack/react-table";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ClearUrlFiltersButton } from "@/components/shared/active-filters";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,17 @@ interface DataTableProps<TData extends RowData> {
   skeletonRows?: number;
   /** Height cap for the scroll area; the table body scrolls, not the page. */
   maxHeightClassName?: string;
+  /** Adds a checkbox column. Selection is controlled and keyed by row id. */
+  selection?: RowSelection<TData>;
+}
+
+export interface RowSelection<TData> {
+  selected: ReadonlySet<string>;
+  onChange: (next: Set<string>) => void;
+  /** Rows that can't be selected render a disabled checkbox. */
+  isSelectable?: (row: TData) => boolean;
+  /** Accessible label for a row's checkbox, e.g. the item name. */
+  rowLabel?: (row: TData) => string;
 }
 
 const toSortingState = (sort?: string): SortingState => {
@@ -73,12 +85,17 @@ export function DataTable<TData extends RowData>({
   empty,
   skeletonRows = 8,
   maxHeightClassName = TABLE_MAX_HEIGHT,
+  selection,
 }: DataTableProps<TData>) {
   const sorting = toSortingState(sort);
+  const allColumns = useMemo(
+    () => (selection ? [selectionColumn(selection, data ?? EMPTY, getRowId), ...columns] : columns),
+    [selection, data, getRowId, columns],
+  );
 
   const table = useTable({
     features: dataTableFeatures,
-    columns,
+    columns: allColumns,
     data: data ?? EMPTY,
     getRowId: (row) => getRowId(row as TData),
     manualSorting: true,
@@ -123,7 +140,7 @@ export function DataTable<TData extends RowData>({
           {isLoading ? (
             Array.from({ length: skeletonRows }, (_, i) => (
               <TableRow key={i} className="hover:bg-transparent">
-                {columns.map((column, j) => (
+                {allColumns.map((column, j) => (
                   <TableCell key={j} className={cn("py-3", column.meta?.className)}>
                     <Skeleton className={cn("h-4", j === 0 ? "w-40" : "w-20")} />
                   </TableCell>
@@ -132,7 +149,7 @@ export function DataTable<TData extends RowData>({
             ))
           ) : rows.length === 0 ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={columns.length} className="p-0">
+              <TableCell colSpan={allColumns.length} className="p-0">
                 {empty}
                 {/* Shown only when filters/search are active in the URL. */}
                 <div className="flex justify-center empty:hidden [&:has(button)]:-mt-6 [&:has(button)]:pb-8">
@@ -145,7 +162,8 @@ export function DataTable<TData extends RowData>({
               <TableRow
                 key={row.id}
                 onClick={onRowClick ? () => onRowClick(row.original as TData) : undefined}
-                className={cn(onRowClick && "cursor-pointer")}
+                data-state={selection?.selected.has(row.id) ? "selected" : undefined}
+                className={cn(onRowClick && "cursor-pointer", "data-[state=selected]:bg-accent/60")}
               >
                 {row.getAllCells().map((cell) => (
                   <TableCell key={cell.id} className={cn("py-2.5", cell.column.columnDef.meta?.className)}>
@@ -162,6 +180,57 @@ export function DataTable<TData extends RowData>({
 }
 
 const EMPTY: never[] = [];
+
+/** Leading checkbox column; the header box toggles every selectable row currently shown. */
+function selectionColumn<TData extends RowData>(
+  { selected, onChange, isSelectable = () => true, rowLabel }: RowSelection<TData>,
+  rows: TData[],
+  getRowId: (row: TData) => string,
+): DataTableColumn<TData> {
+  const ids = rows.filter(isSelectable).map(getRowId);
+  const picked = ids.filter((id) => selected.has(id)).length;
+  const toggleAll = () => {
+    const next = new Set(selected);
+    if (picked === ids.length) ids.forEach((id) => next.delete(id));
+    else ids.forEach((id) => next.add(id));
+    onChange(next);
+  };
+  return {
+    id: "__select",
+    enableSorting: false,
+    header: () => (
+      <Checkbox
+        aria-label="Select all rows shown"
+        disabled={ids.length === 0}
+        checked={picked === 0 ? false : picked === ids.length ? true : "indeterminate"}
+        onCheckedChange={toggleAll}
+        className="translate-y-0.5"
+      />
+    ),
+    cell: ({ row }) => {
+      const item = row.original as TData;
+      const id = getRowId(item);
+      return (
+        // The cell swallows clicks so ticking a box never opens the row.
+        <div onClick={(e) => e.stopPropagation()} className="flex">
+          <Checkbox
+            aria-label={rowLabel ? `Select ${rowLabel(item)}` : "Select row"}
+            disabled={!isSelectable(item)}
+            checked={selected.has(id)}
+            onCheckedChange={(checked) => {
+              const next = new Set(selected);
+              if (checked) next.add(id);
+              else next.delete(id);
+              onChange(next);
+            }}
+            className="translate-y-0.5"
+          />
+        </div>
+      );
+    },
+    meta: { className: "w-10 pr-0" },
+  };
+}
 
 /** Fits header + toolbar + pagination on screen; never shorter than ~6 rows on small phones. */
 export const TABLE_MAX_HEIGHT = "max-h-[max(20rem,calc(100dvh-22rem))]";
