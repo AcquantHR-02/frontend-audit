@@ -11,6 +11,7 @@ import {
   type DataTableColumn,
 } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -23,7 +24,8 @@ import { Permission } from "@/lib/auth";
 import { auditTypeMeta, formatScore, runPhaseMeta } from "@/lib/domain";
 import { formatDate, formatDateRange } from "@/lib/utils";
 import type { AuditRunView, AuditType, RunPhase } from "@/types/domain";
-import { useGetAuditRunsQuery } from "../api/audit-runs.api";
+import { auditRunsApi, useGetAuditRunsQuery } from "../api/audit-runs.api";
+import type { CsvColumn } from "@/lib/export/csv";
 
 const typeOptions = (Object.keys(auditTypeMeta) as AuditType[]).map((t) => ({
   value: t,
@@ -31,17 +33,39 @@ const typeOptions = (Object.keys(auditTypeMeta) as AuditType[]).map((t) => ({
 }));
 const phaseOptions = (Object.keys(runPhaseMeta) as RunPhase[]).map((p) => ({ value: p, label: runPhaseMeta[p].label }));
 
+const runCsvColumns: CsvColumn<AuditRunView>[] = [
+  { header: "Run", value: (r) => r.code },
+  { header: "Audit type", value: (r) => auditTypeMeta[r.auditType].label },
+  { header: "Audited party", value: (r) => r.partyName },
+  { header: "Principal Employer", value: (r) => r.peName },
+  { header: "Unit code", value: (r) => r.unitCode },
+  { header: "Unit", value: (r) => r.unitName },
+  { header: "Activity from", value: (r) => r.activityPeriodStart },
+  { header: "Activity to", value: (r) => r.activityPeriodEnd },
+  { header: "Phase", value: (r) => runPhaseMeta[r.phase].label },
+  { header: "Items", value: (r) => r.score.assignedTotal },
+  { header: "Complied", value: (r) => r.score.complied },
+  { header: "Not complied", value: (r) => r.score.notComplied },
+  { header: "Not applicable", value: (r) => r.score.notApplicable },
+  { header: "Not stamped", value: (r) => r.score.pending },
+  { header: "Score", value: (r) => formatScore(r.score) },
+  { header: "Published", value: (r) => r.publishedAt?.slice(0, 10) },
+];
+
 export function AuditRunsPage() {
   const router = useRouter();
   const canCreate = useCan(Permission.AUDIT_RUNS_CREATE);
   const table = useTableUrlState("createdAt,desc");
   const [type, setType] = useUrlFilter("type", table.resetPage);
   const [phase, setPhase] = useUrlFilter("phase", table.resetPage);
-  const { data, isLoading, isFetching } = useGetAuditRunsQuery({
-    ...table.request,
+  const filters = {
+    search: table.request.search,
+    sort: table.request.sort,
     auditType: (type || undefined) as AuditType | undefined,
     phase: (phase || undefined) as RunPhase | undefined,
-  });
+  };
+  const { data, isLoading, isFetching } = useGetAuditRunsQuery({ ...table.request, ...filters });
+  const [loadRuns] = auditRunsApi.endpoints.getAuditRuns.useLazyQuery();
 
   const columns: DataTableColumn<AuditRunView>[] = [
     {
@@ -139,6 +163,14 @@ export function AuditRunsPage() {
           search={table.search}
           onSearchChange={table.setSearch}
           searchPlaceholder="Search run, party or unit…"
+          actions={
+            <ExportCsvButton
+              fileName="audit-runs"
+              columns={runCsvColumns}
+              disabled={!data?.totalElements}
+              fetchPage={(page, size) => loadRuns({ ...filters, page, size }).unwrap()}
+            />
+          }
           filters={
             <>
               <FilterSelect label="Type" value={type} onChange={setType} options={typeOptions} />

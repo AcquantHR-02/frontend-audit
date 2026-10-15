@@ -13,6 +13,7 @@ import {
   type DataTableColumn,
 } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { RowActions } from "@/components/shared/row-actions";
@@ -26,14 +27,24 @@ import { Permission } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 import type { ApiError } from "@/types/api";
 import type { VendorSummary } from "@/types/domain";
-import { useGetVendorsQuery, useSetVendorStatusMutation } from "../../api/vendors.api";
+import { useGetVendorsQuery, useSetVendorStatusMutation, vendorsApi } from "../../api/vendors.api";
+import type { CsvColumn } from "@/lib/export/csv";
 import { VendorFormDialog } from "./vendor-form-dialog";
+
+const vendorCsvColumns: CsvColumn<VendorSummary>[] = [
+  { header: "Vendor", value: (v) => v.name },
+  { header: "Active units", value: (v) => v.activeUnitCount },
+  { header: "Active", value: (v) => (v.isActive ? "Yes" : "No") },
+  { header: "Last updated", value: (v) => v.updatedAt.slice(0, 10) },
+];
 
 export function VendorsPage() {
   const canManage = useCan(Permission.MASTERS_MANAGE);
   const table = useTableUrlState("name,asc");
   const [status, setStatus] = useUrlFilter("status", table.resetPage);
-  const { data, isLoading, isFetching } = useGetVendorsQuery({ ...table.request, active: toActiveParam(status) });
+  const filters = { search: table.request.search, sort: table.request.sort, active: toActiveParam(status) };
+  const { data, isLoading, isFetching } = useGetVendorsQuery({ ...table.request, ...filters });
+  const [loadVendors] = vendorsApi.endpoints.getVendors.useLazyQuery();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<VendorSummary | null>(null);
@@ -130,6 +141,14 @@ export function VendorsPage() {
           search={table.search}
           onSearchChange={table.setSearch}
           searchPlaceholder="Search vendors…"
+          actions={
+            <ExportCsvButton
+              fileName="vendors"
+              columns={vendorCsvColumns}
+              disabled={!data?.totalElements}
+              fetchPage={(page, size) => loadVendors({ ...filters, page, size }).unwrap()}
+            />
+          }
           filters={<FilterSelect label="Status" value={status} onChange={setStatus} options={activeOptions} />}
         />
         <DataTable

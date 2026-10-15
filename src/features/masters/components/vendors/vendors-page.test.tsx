@@ -3,6 +3,7 @@ import { setupServer } from "msw/node";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { Provider } from "react-redux";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { authApi } from "@/features/auth";
 import { handlers } from "@/mocks/handlers";
 import { makeStore } from "@/store";
@@ -18,7 +19,9 @@ async function renderAs(email: string) {
   render(
     <Provider store={store}>
       <NuqsTestingAdapter searchParams="?size=50">
-        <VendorsPage />
+        <TooltipProvider>
+          <VendorsPage />
+        </TooltipProvider>
       </NuqsTestingAdapter>
     </Provider>,
   );

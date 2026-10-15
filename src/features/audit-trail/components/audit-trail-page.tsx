@@ -3,10 +3,12 @@
 import { HistoryIcon } from "lucide-react";
 import { DataTable, DataTablePagination, DataTableToolbar, type DataTableColumn } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { useGetAuditTrailQuery, type AuditEvent } from "@/features/reports";
+import { reportsApi, useGetAuditTrailQuery, type AuditEvent } from "@/features/reports";
+import type { CsvColumn } from "@/lib/export/csv";
 import { useTableUrlState } from "@/hooks/use-table-url-state";
 import { useUrlFilter } from "@/hooks/use-url-filter";
 import type { StatusTone } from "@/lib/domain";
@@ -39,6 +41,16 @@ const actions: { value: string; label: string; tone: StatusTone }[] = [
   { value: "REACTIVATED", label: "Reactivated", tone: "success" },
 ];
 const byValue = new Map(actions.map((a) => [a.value, a]));
+
+const eventCsvColumns: CsvColumn<AuditEvent>[] = [
+  { header: "When", value: (e) => e.at },
+  { header: "Person", value: (e) => e.actorName },
+  { header: "Role", value: (e) => e.actorRole },
+  { header: "Action", value: (e) => byValue.get(e.action)?.label ?? e.action },
+  { header: "Record type", value: (e) => e.entityType },
+  { header: "Record id", value: (e) => e.entityId },
+  { header: "Details", value: (e) => e.summary },
+];
 
 const columns: DataTableColumn<AuditEvent>[] = [
   {
@@ -80,7 +92,9 @@ const columns: DataTableColumn<AuditEvent>[] = [
 export function AuditTrailPage() {
   const table = useTableUrlState();
   const [action, setAction] = useUrlFilter("action", table.resetPage);
-  const { data, isLoading, isFetching } = useGetAuditTrailQuery({ ...table.request, action: action || undefined });
+  const filters = { search: table.request.search, sort: table.request.sort, action: action || undefined };
+  const { data, isLoading, isFetching } = useGetAuditTrailQuery({ ...table.request, ...filters });
+  const [loadEvents] = reportsApi.endpoints.getAuditTrail.useLazyQuery();
 
   return (
     <>
@@ -93,6 +107,14 @@ export function AuditTrailPage() {
           search={table.search}
           onSearchChange={table.setSearch}
           searchPlaceholder="Search person or details…"
+          actions={
+            <ExportCsvButton
+              fileName="audit-trail"
+              columns={eventCsvColumns}
+              disabled={!data?.totalElements}
+              fetchPage={(page, size) => loadEvents({ ...filters, page, size }).unwrap()}
+            />
+          }
           filters={<FilterSelect label="Action" value={action} onChange={setAction} options={actions} />}
         />
         <DataTable

@@ -12,6 +12,7 @@ import {
   type DataTableColumn,
 } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { RowActions } from "@/components/shared/row-actions";
@@ -32,22 +33,38 @@ import {
   useSetUserStatusMutation,
   useUnlockUserMutation,
   type UserWithPassword,
+  usersApi,
 } from "../api/users.api";
+import type { CsvColumn } from "@/lib/export/csv";
 import { TemporaryPasswordDialog } from "./temporary-password-dialog";
 import { UserFormDialog } from "./user-form-dialog";
 
 const roleOptions = (Object.keys(roleMeta) as Role[]).map((r) => ({ value: r, label: roleMeta[r].label }));
+
+const userCsvColumns: CsvColumn<UserView>[] = [
+  { header: "Name", value: (u) => u.fullName },
+  { header: "Email", value: (u) => u.email },
+  { header: "Role", value: (u) => roleMeta[u.role].label },
+  { header: "Scope", value: (u) => u.scopeName },
+  { header: "Active", value: (u) => (u.isActive ? "Yes" : "No") },
+  { header: "Locked", value: (u) => (u.isLocked ? "Yes" : "No") },
+  { header: "Must change password", value: (u) => (u.mustChangePassword ? "Yes" : "No") },
+  { header: "Created", value: (u) => u.createdAt.slice(0, 10) },
+];
 
 export function UsersPage() {
   const me = useCurrentUser();
   const table = useTableUrlState("fullName,asc");
   const [role, setRole] = useUrlFilter("role", table.resetPage);
   const [status, setStatus] = useUrlFilter("status", table.resetPage);
-  const { data, isLoading, isFetching } = useGetUsersQuery({
-    ...table.request,
+  const filters = {
+    search: table.request.search,
+    sort: table.request.sort,
     role: (role || undefined) as Role | undefined,
     active: toActiveParam(status),
-  });
+  };
+  const { data, isLoading, isFetching } = useGetUsersQuery({ ...table.request, ...filters });
+  const [loadUsers] = usersApi.endpoints.getUsers.useLazyQuery();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<UserView | null>(null);
@@ -196,6 +213,14 @@ export function UsersPage() {
           search={table.search}
           onSearchChange={table.setSearch}
           searchPlaceholder="Search name, email or scope…"
+          actions={
+            <ExportCsvButton
+              fileName="users"
+              columns={userCsvColumns}
+              disabled={!data?.totalElements}
+              fetchPage={(page, size) => loadUsers({ ...filters, page, size }).unwrap()}
+            />
+          }
           filters={
             <>
               <FilterSelect label="Role" value={role} onChange={setRole} options={roleOptions} />

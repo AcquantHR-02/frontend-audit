@@ -10,6 +10,7 @@ import {
   type DataTableColumn,
 } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
@@ -21,7 +22,8 @@ import { isAuditor } from "@/lib/auth";
 import { auditTypeMeta, findingMeta } from "@/lib/domain";
 import { formatDate, formatDateRange } from "@/lib/utils";
 import type { AuditType, FindingStatus, FindingView } from "@/types/domain";
-import { useGetFindingsQuery, useGetFindingsSummaryQuery } from "../api/findings.api";
+import { findingsApi, useGetFindingsQuery, useGetFindingsSummaryQuery } from "../api/findings.api";
+import type { CsvColumn } from "@/lib/export/csv";
 
 const statusOptions = (Object.keys(findingMeta) as FindingStatus[]).map((s) => ({
   value: s,
@@ -32,6 +34,24 @@ const typeOptions = (Object.keys(auditTypeMeta) as AuditType[]).map((t) => ({
   label: auditTypeMeta[t].label,
 }));
 
+const findingCsvColumns: CsvColumn<FindingView>[] = [
+  { header: "Requirement", value: (f) => f.requirement },
+  { header: "Act", value: (f) => f.actName },
+  { header: "Status", value: (f) => findingMeta[f.status].label },
+  { header: "Audit type", value: (f) => auditTypeMeta[f.auditType].label },
+  { header: "Audited party", value: (f) => f.partyName },
+  { header: "Principal Employer", value: (f) => f.peName },
+  { header: "Unit code", value: (f) => f.unitCode },
+  { header: "Unit", value: (f) => f.unitName },
+  { header: "Run", value: (f) => f.runCode },
+  { header: "Period from", value: (f) => f.periodStart },
+  { header: "Period to", value: (f) => f.periodEnd },
+  { header: "Audit remarks", value: (f) => f.auditRemarks },
+  { header: "Remediation uploads", value: (f) => f.attachmentCount },
+  { header: "Last remediation", value: (f) => f.lastRemediationAt?.slice(0, 10) },
+  { header: "Opened", value: (f) => f.createdAt.slice(0, 10) },
+];
+
 export function FindingsPage() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -39,11 +59,14 @@ export function FindingsPage() {
   const [status, setStatus] = useUrlFilter("status", table.resetPage);
   const [type, setType] = useUrlFilter("type", table.resetPage);
   const { data: summary } = useGetFindingsSummaryQuery();
-  const { data, isLoading, isFetching } = useGetFindingsQuery({
-    ...table.request,
+  const filters = {
+    search: table.request.search,
+    sort: table.request.sort,
     status: (status || undefined) as FindingStatus | undefined,
     auditType: (type || undefined) as AuditType | undefined,
-  });
+  };
+  const { data, isLoading, isFetching } = useGetFindingsQuery({ ...table.request, ...filters });
+  const [loadFindings] = findingsApi.endpoints.getFindings.useLazyQuery();
 
   const columns: DataTableColumn<FindingView>[] = [
     {
@@ -125,6 +148,14 @@ export function FindingsPage() {
           search={table.search}
           onSearchChange={table.setSearch}
           searchPlaceholder="Search requirement, party, unit or run…"
+          actions={
+            <ExportCsvButton
+              fileName="findings"
+              columns={findingCsvColumns}
+              disabled={!data?.totalElements}
+              fetchPage={(page, size) => loadFindings({ ...filters, page, size }).unwrap()}
+            />
+          }
           filters={
             <>
               <FilterSelect label="Status" value={status} onChange={setStatus} options={statusOptions} />

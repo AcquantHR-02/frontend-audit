@@ -13,6 +13,7 @@ import {
   type DataTableColumn,
 } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { RowActions } from "@/components/shared/row-actions";
@@ -27,20 +28,30 @@ import type { PrincipalEmployerSummary } from "@/types/domain";
 import {
   useGetPrincipalEmployersQuery,
   useSetPrincipalEmployerStatusMutation,
+  principalEmployersApi,
 } from "../../api/principal-employers.api";
+import type { CsvColumn } from "@/lib/export/csv";
 import { PrincipalEmployerFormDialog } from "./pe-form-dialog";
 
 export const peDetailHref = (id: string) => `/masters/principal-employers/${id}`;
+
+const peCsvColumns: CsvColumn<PrincipalEmployerSummary>[] = [
+  { header: "Principal Employer", value: (p) => p.name },
+  { header: "Legal name", value: (p) => p.legalName },
+  { header: "Units", value: (p) => p.unitCount },
+  { header: "Open units", value: (p) => p.openUnitCount },
+  { header: "Active", value: (p) => (p.isActive ? "Yes" : "No") },
+  { header: "Last updated", value: (p) => p.updatedAt.slice(0, 10) },
+];
 
 export function PrincipalEmployerListPage() {
   const router = useRouter();
   const canManage = useCan(Permission.MASTERS_MANAGE);
   const table = useTableUrlState("name,asc");
   const [status, setStatus] = useUrlFilter("status", table.resetPage);
-  const { data, isLoading, isFetching } = useGetPrincipalEmployersQuery({
-    ...table.request,
-    active: toActiveParam(status),
-  });
+  const filters = { search: table.request.search, sort: table.request.sort, active: toActiveParam(status) };
+  const { data, isLoading, isFetching } = useGetPrincipalEmployersQuery({ ...table.request, ...filters });
+  const [loadPes] = principalEmployersApi.endpoints.getPrincipalEmployers.useLazyQuery();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PrincipalEmployerSummary | null>(null);
@@ -139,6 +150,14 @@ export function PrincipalEmployerListPage() {
           search={table.search}
           onSearchChange={table.setSearch}
           searchPlaceholder="Search by name or legal name…"
+          actions={
+            <ExportCsvButton
+              fileName="principal-employers"
+              columns={peCsvColumns}
+              disabled={!data?.totalElements}
+              fetchPage={(page, size) => loadPes({ ...filters, page, size }).unwrap()}
+            />
+          }
           filters={<FilterSelect label="Status" value={status} onChange={setStatus} options={activeOptions} />}
         />
         <DataTable
