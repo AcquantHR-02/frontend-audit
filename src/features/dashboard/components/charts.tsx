@@ -18,9 +18,12 @@ import type { RunPhase, ScoreCounts } from "@/types/domain";
 export function BarList({
   rows,
   valueLabel,
+  barClassName = "bg-chart-1",
 }: {
   rows: { label: string; value: number; display?: string; href?: string }[];
   valueLabel?: string;
+  /** Bar fill; defaults to the single magnitude hue. */
+  barClassName?: string;
 }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
@@ -36,7 +39,7 @@ export function BarList({
               title={`${row.label}: ${row.display ?? row.value}`}
             >
               <span
-                className="block h-full rounded-full bg-chart-1 transition-[width] duration-500"
+                className={cn("block h-full rounded-full transition-[width] duration-500", barClassName)}
                 style={{ width: `${(row.value / max) * 100}%` }}
               />
             </span>

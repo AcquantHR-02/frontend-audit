@@ -3,8 +3,10 @@ import { Permission } from "@/lib/auth";
 import type { AuditRunView, RunPhase, ScoreCounts } from "@/types/domain";
 import { requireUser } from "../crud";
 import { db } from "../db";
-import { apiUrl, networkDelay, paginate } from "../utils";
+import { apiUrl, networkDelay, paginate, todayIso } from "../utils";
 import { toRunView, visibleTo } from "./audit-runs.handlers";
+
+type WindowEvent = "WINDOW_1_OPENS" | "WINDOW_1_CLOSES" | "WINDOW_2_CLOSES";
 
 const empty = (): ScoreCounts => ({ complied: 0, notComplied: 0, notApplicable: 0, pending: 0, assignedTotal: 0 });
 const add = (a: ScoreCounts, b: ScoreCounts): ScoreCounts => ({
@@ -47,6 +49,53 @@ export const reportsHandlers = [
     }
     const findings = db.findings.filter((f) => runIds.has(db.airs.find((a) => a.id === f.airId)?.runId ?? ""));
 
+    // Upcoming window dates (next 30 days), soonest first.
+    const today = todayIso();
+    const daysFrom = (date: string) => Math.round((Date.parse(date) - Date.parse(today)) / 86_400_000);
+    const deadlines = runs
+      .flatMap((r): { r: AuditRunView; kind: WindowEvent; date: string }[] => {
+        if (r.phase === "SCHEDULED") return [{ r, kind: "WINDOW_1_OPENS", date: r.window1Start }];
+        if (r.phase === "WINDOW_1") return [{ r, kind: "WINDOW_1_CLOSES", date: r.window1End }];
+        if (r.phase === "WINDOW_2" && r.window2End) return [{ r, kind: "WINDOW_2_CLOSES", date: r.window2End }];
+        return [];
+      })
+      .map(({ r, kind, date }) => ({
+        runId: r.id,
+        runCode: r.code,
+        partyName: r.partyName,
+        unitCode: r.unitCode,
+        kind,
+        date,
+        daysLeft: daysFrom(date),
+      }))
+      .filter((d) => d.daysLeft >= 0 && d.daysLeft <= 30)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.runCode.localeCompare(b.runCode))
+      .slice(0, 6);
+
+    // Not-complied items in published runs, by Act.
+    const publishedIds = new Set(published.map((r) => r.id));
+    const ncCounts = new Map<string, number>();
+    for (const a of db.airs) {
+      if (publishedIds.has(a.runId) && a.complianceStatus === "NOT_COMPLIED") {
+        ncCounts.set(a.actNameSnapshot, (ncCounts.get(a.actNameSnapshot) ?? 0) + 1);
+      }
+    }
+    const ncByAct = [...ncCounts.entries()]
+      .map(([act, count]) => ({ act, count }))
+      .sort((a, b) => b.count - a.count || a.act.localeCompare(b.act));
+
+    // Open findings by age since they were opened.
+    const ages = findings.filter((f) => f.status === "OPEN").map((f) => -daysFrom(f.createdAt.slice(0, 10)));
+    const findingsAging = {
+      buckets: [
+        { label: "Under 30 days", count: ages.filter((d) => d < 30).length },
+        { label: "30–60 days", count: ages.filter((d) => d >= 30 && d < 60).length },
+        { label: "60–90 days", count: ages.filter((d) => d >= 60 && d < 90).length },
+        { label: "90+ days", count: ages.filter((d) => d >= 90).length },
+      ],
+      oldestDays: ages.length ? Math.max(...ages) : null,
+    };
+
     return HttpResponse.json({
       runsByPhase: Object.fromEntries(phases.map((p) => [p, runs.filter((r) => r.phase === p).length])),
       totalRuns: runs.length,
@@ -61,6 +110,9 @@ export const reportsHandlers = [
       partyScores: [...partyScores.values()].sort((a, b) => b.score.assignedTotal - a.score.assignedTotal).slice(0, 8),
       trend: [...months.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([month, score]) => ({ month, score })),
       recentRuns: [...runs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 6),
+      deadlines,
+      ncByAct,
+      findingsAging,
     });
   }),
 

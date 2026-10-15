@@ -344,6 +344,12 @@ npm run lint && npm run typecheck
 - Thin theme-aware scrollbars, brand-tinted text selection, a 300 ms fade-in on route change (off for reduced motion).
 - Branded **404** page (wordmark, gradient 404, grid backdrop, overview / audit runs / sign-in links).
 
+### 2026-10-15 — Extra: dashboard insights row
+
+- `/dashboard` now also returns `deadlines` (window opens/closes in the next 30 days, soonest first, max 6, with `daysLeft`), `ncByAct` (not-complied items in published runs grouped by Act) and `findingsAging` (open findings bucketed < 30 / 30–60 / 60–90 / 90+ days + `oldestDays`). **Backend: please add these fields** (shapes in `features/dashboard/api/dashboard.api.ts`).
+- New dashboard row (`features/dashboard/components/insights.tsx`): **Upcoming deadlines** (calendar tile, party · unit, run code, urgency pill), **Not complied by Act** (bars link to `/findings?search=<Act>`), **Open findings by age** (headline oldest age, stacked bar, sequential shades = older is darker).
+- "Score by month" labels formatted (`Jul 2026`); verified for admin, vendor and PE dashboards.
+
 ## 8. Status
 
 All 9 roadmap steps are complete. When the backend is ready: set `NEXT_PUBLIC_API_MOCKING=disabled` and `NEXT_PUBLIC_API_BASE_URL`, then reconcile any contract differences listed under _Open Questions_ (or generate endpoints from Swagger with `@rtk-query/codegen-openapi`).

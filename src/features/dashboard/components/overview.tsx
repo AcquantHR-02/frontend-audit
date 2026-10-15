@@ -14,7 +14,7 @@ import {
   UploadIcon,
   type LucideIcon,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -30,6 +30,7 @@ import { formatScore, roleMeta, runPhaseMeta, scoreInTenths } from "@/lib/domain
 import { cn, formatCount, formatDateRange } from "@/lib/utils";
 import { useGetDashboardQuery, type DashboardData } from "../api/dashboard.api";
 import { BarList, ComplianceRing, PhaseTiles, ScoreTrend } from "./charts";
+import { DeadlineList, FindingsAging, NcByAct } from "./insights";
 
 const descriptions = {
   AUDITOR_ADMIN: "Organisation-wide status of audit runs, reviews and findings across all Principal Employers.",
@@ -172,6 +173,11 @@ function OverviewSkeleton() {
       <div className="grid gap-4 xl:grid-cols-2">
         <Skeleton className="h-56" />
         <Skeleton className="h-56" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
       </div>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <Skeleton className="h-72" />
@@ -356,6 +362,30 @@ function OverviewContent({
         </Panel>
       </div>
 
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <Panel title="Upcoming deadlines" action={<span className="text-xs text-muted-foreground">Next 30 days</span>}>
+          <DeadlineList deadlines={data.deadlines} />
+        </Panel>
+        <Panel
+          title="Not complied by Act"
+          action={<span className="text-xs text-muted-foreground">Published runs</span>}
+        >
+          <NcByAct rows={data.ncByAct} />
+        </Panel>
+        <Panel
+          title="Open findings by age"
+          action={
+            <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+              <Link href="/findings?status=OPEN">
+                View <ArrowRightIcon />
+              </Link>
+            </Button>
+          }
+        >
+          <FindingsAging aging={data.findingsAging} openFindings={data.openFindings} />
+        </Panel>
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <Panel title="Score trend by activity month">
           {data.trend.length > 1 ? (
@@ -382,7 +412,7 @@ function OverviewContent({
                         display: formatScore(p.score),
                       }))
                   : data.trend.map((t) => ({
-                      label: t.month,
+                      label: format(parseISO(`${t.month}-01`), "MMM yyyy"),
                       value: (scoreInTenths(t.score) ?? 0) / 10,
                       display: formatScore(t.score),
                     }))

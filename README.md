@@ -211,6 +211,10 @@ Content changes by role.
   Items to upload, Published this FY, Open findings.
 - **Compliance score**: ring gauge plus the Complied / Not complied / NA breakdown and the formula.
 - **Audit runs by phase**: six clickable tiles in workflow order; each opens the filtered run list.
+- **Upcoming deadlines**: windows opening or closing in the next 30 days, with an urgency pill
+  (`in 5 days`: red ≤ 2 days, amber ≤ 7). Click to open the run.
+- **Not complied by Act**: where non-compliance concentrates; each bar opens the matching findings.
+- **Open findings by age**: oldest open finding (days) and a breakdown into under 30 / 30–60 / 60–90 / 90+ days.
 - **Score trend by activity month**: area chart, latest value and change from the previous month.
   Hover for details.
 - **Score by audited party**: lowest first, so the weakest parties are on top.
