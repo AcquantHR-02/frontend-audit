@@ -7,6 +7,7 @@ import { mastersHandlers } from "./masters.handlers";
 import { notificationsHandlers } from "./notifications.handlers";
 import { reportsHandlers } from "./reports.handlers";
 import { reviewHandlers } from "./review.handlers";
+import { searchHandlers } from "./search.handlers";
 import { usersHandlers } from "./users.handlers";
 
 /** One handler file per feature; register each here. */
@@ -21,4 +22,5 @@ export const handlers = [
   ...usersHandlers,
   ...notificationsHandlers,
   ...filesHandlers,
+  ...searchHandlers,
 ];

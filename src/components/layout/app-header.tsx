@@ -12,9 +12,11 @@ interface AppHeaderProps {
   onSignOut: () => void;
   /** Notification bell, injected by the app shell (layout can't import features). */
   notifications?: ReactNode;
+  /** Global search trigger, injected the same way. */
+  search?: ReactNode;
 }
 
-export function AppHeader({ user, onSignOut, notifications }: AppHeaderProps) {
+export function AppHeader({ user, onSignOut, notifications, search }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-4">
       <SidebarTrigger className="-ml-1" />
@@ -22,6 +24,7 @@ export function AppHeader({ user, onSignOut, notifications }: AppHeaderProps) {
       <AppBreadcrumbs />
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        {search}
         {notifications}
         <UserMenu user={user} onSignOut={onSignOut} />
       </div>
