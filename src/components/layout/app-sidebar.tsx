@@ -21,10 +21,9 @@ import { siteConfig } from "@/config/site";
 import { can } from "@/lib/auth";
 import type { SessionUser } from "@/types/domain";
 import { Brand } from "./brand";
-import { SidebarUserMenu } from "./user-menu";
 
 /** Primary navigation (navy in light, slate in dark); items filtered by the user's permissions. */
-export function AppSidebar({ user, onSignOut }: { user: SessionUser; onSignOut: () => void }) {
+export function AppSidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const activeHref = findNavItem(pathname)?.item.href;
   const { isMobile, setOpenMobile, state } = useSidebar();
@@ -76,8 +75,8 @@ export function AppSidebar({ user, onSignOut }: { user: SessionUser; onSignOut: 
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2">
-        <SidebarUserMenu user={user} onSignOut={onSignOut} />
+      <SidebarFooter className="border-t border-sidebar-border px-4 py-3 text-[11px] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+        v{siteConfig.version} · {siteConfig.organisation}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -322,7 +322,7 @@ npm run lint && npm run typecheck
 ### 2026-10-15 — Extra: slate dark sidebar, profile menu
 
 - **Dark sidebar** now uses the same slate surfaces as the rest of the dark UI (one step above the page, hairline border, primary-tinted active item) instead of the navy gradient; light mode keeps the navy.
-- **Profile:** header trigger shows a brand-gradient avatar with an online dot; the menu has a gradient identity card (name, email, role), a Light / Dark / System segmented switch that stays open while switching, and icon-led Change password / Sign out actions. The sidebar footer now holds a matching profile card (avatar only when collapsed) that opens the same menu.
+- **Profile:** header trigger shows a brand-gradient avatar with an online dot; the menu has a gradient identity card (name, email, role), a Light / Dark / System segmented switch that stays open while switching, and icon-led Change password / Sign out actions. (A duplicate profile card in the sidebar footer was tried and removed at the user's request — profile lives only in the header.)
 
 ### 2026-10-15 — Extra: clear filters everywhere
 

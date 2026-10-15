@@ -21,7 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { siteConfig } from "@/config/site";
 import { roleMeta } from "@/lib/domain";
 import { cn, initials } from "@/lib/utils";
@@ -151,39 +150,5 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
       </DropdownMenuTrigger>
       <ProfileMenuContent user={user} onSignOut={onSignOut} align="end" sideOffset={8} />
     </DropdownMenu>
-  );
-}
-
-/** Sidebar footer profile card; collapses to the avatar in icon mode. */
-export function SidebarUserMenu({ user, onSignOut }: UserMenuProps) {
-  const { isMobile } = useSidebar();
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              tooltip={user.fullName}
-              className="rounded-lg border border-sidebar-border bg-sidebar-accent/60 text-sidebar-foreground group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent"
-            >
-              <UserAvatar user={user} className="ring-sidebar" dot={false} />
-              <span className="grid min-w-0 flex-1 leading-tight">
-                <span className="truncate text-[13px] font-medium text-white">{user.fullName}</span>
-                <span className="truncate text-[11px] text-sidebar-foreground/65">{user.email}</span>
-              </span>
-              <ChevronsUpDownIcon className="ml-auto size-4 text-sidebar-foreground/60" aria-hidden />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <ProfileMenuContent
-            user={user}
-            onSignOut={onSignOut}
-            side={isMobile ? "top" : "right"}
-            align="end"
-            sideOffset={10}
-          />
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
   );
 }
