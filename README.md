@@ -284,11 +284,36 @@ Deleting is always a **soft delete** (deactivate / reactivate).
 - **Retention**: next purge date, which financial year it removes, runs scheduled for purge, and
   30-day / 7-day notice banners.
 
+### Notifications (bell in the header, `/notifications`)
+
+In-app notifications for the signed-in user. The bell shows a red **unread count** and gives one
+wiggle when there's something new. It checks for new notifications every 60 seconds; when a new one
+arrives, a **toast** pops up with a _View_ button.
+
+| Who gets it | Notification                                               | When                                          | Opens                 |
+| ----------- | ---------------------------------------------------------- | --------------------------------------------- | --------------------- |
+| Vendor / PE | **Window 1 is open** / **Window 2 is open**                | On the window's start date                    | The run               |
+| Vendor / PE | **Window … closes soon**                                   | 2 days before an open window closes           | The run               |
+| Vendor / PE | **Results published · 97.1%** (+ how many findings opened) | When the run is published                     | Findings (or the run) |
+| Vendor / PE | **Finding resolved** / **Finding reopened**                | When an auditor changes the status            | The finding           |
+| Auditors    | **Evidence submitted** / **NA proposed** on AR-…           | When the party uploads                        | The run               |
+| Auditors    | **Remediation submitted**                                  | When the party uploads remediation            | The finding           |
+| Auditors    | **AR-… is ready for review**                               | When Window 1 closes (or review starts early) | The run               |
+| Auditors    | **AR-… is ready to publish**                               | When the run reaches Final review             | The run               |
+| Auditors    | **Data purge in N days**                                   | 30 and 7 days before a retention purge        | Retention             |
+
+- **Dropdown**: newest first, grouped _Today / Yesterday / Earlier_, with an _All / Unread_ switch.
+  Unread items are highlighted with a dot. Clicking one marks it read and opens its page. There is
+  also **Mark all read** and **View all notifications**.
+- **Notifications page**: full history with All / Unread (kept in the URL), paging and Mark all as read.
+- You never get a notification about your own action, and older scheduled notifications (over 10 days)
+  arrive already read.
+
 ### App shell (every page)
 
 - **Sidebar**: menu filtered by your permissions; collapses to icons (button or `Ctrl/⌘ + B`);
   becomes a drawer on phones.
-- **Header**: breadcrumbs, notifications, and the **profile menu** (identity card, Light / Dark /
+- **Header**: breadcrumbs, the **notification bell**, and the **profile menu** (identity card, Light / Dark /
   System theme switch, Change password, Sign out).
 
 ---
@@ -426,7 +451,7 @@ src/
 │       └── admin/{users,audit-trail,retention}/
 ├── features/                 # BUSINESS MODULES, each: api/ components/ schemas/ hooks/ utils/ index.ts
 │   ├── auth  dashboard  audit-runs  findings  reports  audit-trail
-│   └── assignments  masters  users
+│   └── assignments  masters  users  notifications
 ├── components/
 │   ├── ui/                   # shadcn primitives (generated; Select has hover-to-open)
 │   ├── layout/               # sidebar, header, breadcrumbs, profile menu, brand

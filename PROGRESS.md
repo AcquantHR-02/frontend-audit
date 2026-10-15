@@ -143,6 +143,7 @@ audit-frontend/
 - Retention rule interpretation to confirm: FY N becomes purge-eligible on the 1 April two years after it ends (FY 2024-25 → 1 Apr 2027).
 - List rows include derived counts (see `*Summary` / `*View` types in `src/types/domain/master.ts`).
 - Temporary passwords: mock returns them to the admin; production should email them instead.
+- Notification endpoints (in-app, §17): `GET /notifications?unread&page&size` → page + `unreadCount` (signed-in user only, newest first), `POST /notifications/{id}/read`, `POST /notifications/read-all` (204). Types and recipients are listed in README › Notifications; shape in `src/types/domain/notification.ts`. Event-driven ones are created on upload / remediation / finding status; date-driven ones (window open/closing, ready for review/publish, retention) should come from a daily scheduler. Email delivery is still open in §17.
 - Assumption to confirm: JSON is camelCase (Spring/Jackson default) and IDs are serialised as strings.
 
 ## 6a. Spec Questions (for the spec owner)
@@ -349,6 +350,14 @@ npm run lint && npm run typecheck
 - `/dashboard` now also returns `deadlines` (window opens/closes in the next 30 days, soonest first, max 6, with `daysLeft`), `ncByAct` (not-complied items in published runs grouped by Act) and `findingsAging` (open findings bucketed < 30 / 30–60 / 60–90 / 90+ days + `oldestDays`). **Backend: please add these fields** (shapes in `features/dashboard/api/dashboard.api.ts`).
 - New dashboard row (`features/dashboard/components/insights.tsx`): **Upcoming deadlines** (calendar tile, party · unit, run code, urgency pill), **Not complied by Act** (bars link to `/findings?search=<Act>`), **Open findings by age** (headline oldest age, stacked bar, sequential shades = older is darker).
 - "Score by month" labels formatted (`Jul 2026`); verified for admin, vendor and PE dashboards.
+
+### 2026-10-15 — Extra: in-app notification system
+
+- **Feature `features/notifications`**: header bell (unread badge, one-time wiggle, 60 s polling, toast with _View_ when new ones arrive), dropdown (Today / Yesterday / Earlier, All / Unread, mark one read on click, Mark all read, View all) and a `/notifications` page (URL-kept filter, paging). Breadcrumb/title via `usePageTitle`.
+- **Who gets what** (README › Notifications): party — window opened / closing in 2 days, results published (+ findings count), finding resolved / reopened; auditors — evidence submitted, NA proposed, remediation submitted, ready for review, ready to publish, retention purge notices.
+- **Mock backend**: `mocks/notifications.ts` — event notifications pushed from the upload, remediation and finding-status handlers (never to the actor); date-driven ones materialised on read with stable ids (created exactly once; older than 10 days arrive read; never time-stamped in the future). DB v8.
+- `AppHeader` takes the bell as a slot (layout must not import features); old placeholder `notifications-button.tsx` removed.
+- **Tests: 75 passing** (+ vendor scoping and no duplicates, finding-resolved notification with read / read-all).
 
 ## 8. Status
 
