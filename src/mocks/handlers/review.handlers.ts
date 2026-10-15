@@ -14,8 +14,9 @@ import {
   resolveCoveringVersion,
   validateEvidence,
 } from "@/lib/domain";
-import type { AuditItemResult, AuditRun, ComplianceStatus, EvidenceRecord, StoredFile, User } from "@/types/domain";
+import type { AuditItemResult, AuditRun, ComplianceStatus, EvidenceRecord, User } from "@/types/domain";
 import { logEvent } from "../audit-log";
+import { storeUpload } from "../files";
 import { auditorRecipients, notify } from "../notifications";
 import { requireUser } from "../crud";
 import { db, persist } from "../db";
@@ -122,14 +123,7 @@ export const reviewHandlers = [
     });
     if (problem) return errorResponse(400, problem, { code: "VALIDATION_FAILED" });
 
-    const stored: StoredFile[] = files.map((f) => ({
-      id: newId("file"),
-      fileName: f.name,
-      contentType: f.type || "application/octet-stream",
-      sizeBytes: f.size,
-      // Mock only: object URLs last for this browser session. The backend returns signed download URLs.
-      url: typeof URL.createObjectURL === "function" ? URL.createObjectURL(f) : "#",
-    }));
+    const stored = await Promise.all(files.map(storeUpload));
     const record: EvidenceRecord = {
       id: newId("ev"),
       airId: air.id,

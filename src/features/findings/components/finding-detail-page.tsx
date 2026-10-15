@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  ArrowLeftIcon,
-  CheckCircle2Icon,
-  DownloadIcon,
-  FileTextIcon,
-  Loader2Icon,
-  LockIcon,
-  RotateCcwIcon,
-  ShieldAlertIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, CheckCircle2Icon, Loader2Icon, LockIcon, RotateCcwIcon, ShieldAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +8,7 @@ import { usePageTitle } from "@/components/layout/page-title";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FileDropzone } from "@/components/shared/file-dropzone";
+import { FileList } from "@/components/shared/file-preview";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -89,21 +81,7 @@ export function FindingDetailPage({ findingId }: { findingId: string }) {
                         {formatDateTime(a.uploadedAt)}
                       </div>
                       <p className="text-[13px]">{a.remarks}</p>
-                      <ul className="flex flex-wrap gap-1.5">
-                        {a.files.map((file) => (
-                          <li key={file.id}>
-                            <a
-                              href={file.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1 text-xs hover:bg-accent"
-                            >
-                              <FileTextIcon className="size-3.5" aria-hidden /> {file.fileName}
-                              <DownloadIcon className="size-3 text-muted-foreground" aria-hidden />
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
+                      <FileList files={a.files} />
                     </li>
                   ))}
                 </ol>

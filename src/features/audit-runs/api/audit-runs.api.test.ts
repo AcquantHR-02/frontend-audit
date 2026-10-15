@@ -55,7 +55,12 @@ describe("audit run creation (§6, §13, §15.9)", () => {
     expect(run.code).toMatch(/^AR-2026-\d{4}$/);
     expect(run.score.assignedTotal).toBe(automatic + 1);
     const airs = await store.dispatch(auditRunsApi.endpoints.getRunItems.initiate(run.id)).unwrap();
-    expect(airs.every((a) => a.submissionStatus === "PENDING" && a.descriptionSnapshot.length > 0)).toBe(true);
+    // New items start pending; items with valid prior evidence arrive carried forward (§15.8 Mode A).
+    expect(
+      airs.every(
+        (a) => a.submissionStatus === (a.isCarriedForward ? "REVIEWED" : "PENDING") && a.descriptionSnapshot.length > 0,
+      ),
+    ).toBe(true);
     expect(airs.filter((a) => a.periodStart)).toHaveLength(1);
   });
 

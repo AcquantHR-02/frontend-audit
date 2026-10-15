@@ -41,8 +41,9 @@ describe("bulk stamping", () => {
       )
       .unwrap();
     const airs = await auditor.dispatch(auditRunsApi.endpoints.getRunItems.initiate(run.id)).unwrap();
-    const oneTime = airs.find((a) => a.cadenceSnapshot === "ONE_TIME")!;
-    const others = airs.filter((a) => a.id !== oneTime.id).slice(0, 4);
+    const oneTime = airs.find((a) => a.cadenceSnapshot === "ONE_TIME" && !a.isCarriedForward)!;
+    // Other one-time items may arrive with carried-forward evidence, which also needs a valid-to date.
+    const others = airs.filter((a) => a.cadenceSnapshot !== "ONE_TIME").slice(0, 4);
 
     const form = new FormData();
     form.append("files", new File(["%PDF"], "licence.pdf", { type: "application/pdf" }));
@@ -94,6 +95,7 @@ describe("bulk stamping", () => {
     const view = await auditor
       .dispatch(auditRunsApi.endpoints.getAuditRun.initiate(run.id, { forceRefetch: true }))
       .unwrap();
-    expect(view.score.complied).toBe(others.length);
+    const stampedIds = new Set(others.map((a) => a.id));
+    expect(view.score.complied).toBe(airs.filter((a) => a.isCarriedForward || stampedIds.has(a.id)).length);
   });
 });

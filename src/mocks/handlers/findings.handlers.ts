@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw";
 import { can, Permission } from "@/lib/auth";
-import type { Finding, FindingDetail, FindingStatus, FindingView, StoredFile, User } from "@/types/domain";
+import type { Finding, FindingDetail, FindingStatus, FindingView, User } from "@/types/domain";
 import { logEvent } from "../audit-log";
+import { storeUpload } from "../files";
 import { auditorRecipients, notify, partyRecipients } from "../notifications";
 import { requireUser } from "../crud";
 import { db, persist } from "../db";
@@ -56,7 +57,7 @@ function isParty(user: User, finding: Finding) {
   );
 }
 
-const canSee = (user: User, finding: Finding) => {
+export const canSee = (user: User, finding: Finding) => {
   const ctx = resolve(finding);
   return !!ctx && visibleTo(user, ctx.run);
 };
@@ -135,13 +136,7 @@ export const findingsHandlers = [
         fieldErrors: { remarks: "Required" },
       });
 
-    const stored: StoredFile[] = files.map((f) => ({
-      id: newId("file"),
-      fileName: f.name,
-      contentType: f.type || "application/octet-stream",
-      sizeBytes: f.size,
-      url: typeof URL.createObjectURL === "function" ? URL.createObjectURL(f) : "#",
-    }));
+    const stored = await Promise.all(files.map(storeUpload));
     const attachment = {
       id: newId("fat"),
       findingId: finding.id,

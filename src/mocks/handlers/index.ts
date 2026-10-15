@@ -1,6 +1,7 @@
 import { assignmentsHandlers } from "./assignments.handlers";
 import { auditRunsHandlers } from "./audit-runs.handlers";
 import { authHandlers } from "./auth.handlers";
+import { filesHandlers } from "./files.handlers";
 import { findingsHandlers } from "./findings.handlers";
 import { mastersHandlers } from "./masters.handlers";
 import { notificationsHandlers } from "./notifications.handlers";
@@ -19,4 +20,5 @@ export const handlers = [
   ...reportsHandlers,
   ...usersHandlers,
   ...notificationsHandlers,
+  ...filesHandlers,
 ];

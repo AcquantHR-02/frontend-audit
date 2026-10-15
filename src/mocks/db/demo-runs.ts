@@ -3,13 +3,23 @@
  * published July 2026 runs for every vendor-unit pair (mirrors spec §5.2), May/June history
  * for a few vendors (trends), and a few runs in progress for the current cycle.
  */
-import type { AuditItemResult, AuditRun, ChecklistItem, ComplianceStatus, Finding } from "@/types/domain";
+import type {
+  AuditItemResult,
+  AuditRun,
+  ChecklistItem,
+  ComplianceStatus,
+  EvidenceRecord,
+  Finding,
+  StoredFile,
+} from "@/types/domain";
+import { fileUrl } from "../files";
 
 interface Inputs {
   vendorUnitAssignments: { vendorId: string; peUnitId: string }[];
   vendorChecklistAssignments: { vendorId: string; peUnitId: string; checklistItemIds: string[] }[];
   checklistItems: ChecklistItem[];
   acts: { id: string; shortName: string }[];
+  vendors: { id: string; name: string }[];
 }
 
 /** mulberry32 — tiny seeded PRNG so the demo data is identical on every reset. */
@@ -25,13 +35,94 @@ function rng(seed: number) {
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const AUDITOR = "usr-auditor";
+/** The one seeded vendor login; other vendors' uploads are attributed to their site team. */
+const VENDOR_LOGINS: Record<string, { id: string; name: string }> = {
+  "ven-rathna": { id: "usr-vendor", name: "Suresh Kumar" },
+};
 
-export function generateDemoRuns({ vendorUnitAssignments, vendorChecklistAssignments, checklistItems, acts }: Inputs) {
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "Wage slips issued to workmen (Form XIX)" + 2026-09 → "Form-XIX-Sep-2026". */
+function evidenceName(description: string, month: string) {
+  const form = /\((Form [^)]+)\)/.exec(description)?.[1];
+  const words = (form ?? description.split(/\s+/).slice(0, 3).join(" ")).replace(/[^A-Za-z0-9 ]/g, "");
+  return `${words.trim().replace(/\s+/g, "-")}-${MONTHS[Number(month.slice(5, 7)) - 1]}-${month.slice(0, 4)}`;
+}
+
+export function generateDemoRuns({
+  vendorUnitAssignments,
+  vendorChecklistAssignments,
+  checklistItems,
+  acts,
+  vendors,
+}: Inputs) {
   const random = rng(20260714);
   const runs: AuditRun[] = [];
   const airs: AuditItemResult[] = [];
   const findings: Finding[] = [];
+  const evidence: EvidenceRecord[] = [];
+  // Separate stream so adding evidence never changes the seeded statuses and findings.
+  const evidenceRandom = rng(20260901);
   let sequence = 0;
+  const today = iso(new Date());
+
+  /**
+   * What the vendor would have uploaded in Window 1: files for submitted / complied items,
+   * an NA proposal for some not-applicable ones, patchy evidence for some not-complied ones.
+   */
+  function addEvidence(air: AuditItemResult, vendorId: string, w1Start: string, w1End: string) {
+    const status = air.complianceStatus;
+    const roll = evidenceRandom();
+    const proposeNa = status === "NOT_APPLICABLE" && roll < 0.5;
+    const hasFiles =
+      air.submissionStatus === "SUBMITTED" || status === "COMPLIED" || (status === "NOT_COMPLIED" && roll < 0.35);
+    if (!hasFiles && !proposeNa) return;
+
+    const lastDay = w1End < today ? w1End : today;
+    const span = Math.max(0, Math.round((Date.parse(lastDay) - Date.parse(w1Start)) / 86_400_000));
+    const day = addDaysIso(w1Start, Math.floor(evidenceRandom() * (span + 1)));
+    const uploader = VENDOR_LOGINS[vendorId] ?? {
+      id: `party-${vendorId}`,
+      name: `${vendors.find((v) => v.id === vendorId)?.name ?? "Vendor"} site team`,
+    };
+    const base = evidenceName(air.descriptionSnapshot, air.periodStart ?? w1Start);
+    const fileCount = proposeNa ? 0 : evidenceRandom() < 0.3 ? 2 : 1;
+    const files: StoredFile[] = Array.from({ length: fileCount }, (_, n) => {
+      const photo = n === 1 || evidenceRandom() < 0.2;
+      return {
+        // "file-demo-" ids have no stored bytes; the files handler renders a sample document.
+        id: `file-demo-${air.id}-${n}`,
+        fileName: photo ? `${base}-photo${n ? `-${n + 1}` : ""}.svg` : `${base}.pdf`,
+        contentType: photo ? "image/svg+xml" : "application/pdf",
+        sizeBytes: photo
+          ? 18_000 + Math.floor(evidenceRandom() * 40_000)
+          : 60_000 + Math.floor(evidenceRandom() * 240_000),
+        url: fileUrl(`file-demo-${air.id}-${n}`),
+      };
+    });
+    evidence.push({
+      id: `ev-demo-${air.id}`,
+      airId: air.id,
+      files,
+      partyRemarks: proposeNa
+        ? "No such event during the period, so this doesn't apply."
+        : fileCount > 1
+          ? "Register copy and site photo attached."
+          : "Copy attached for the period.",
+      naProposedByParty: proposeNa,
+      validTo: status && air.cadenceSnapshot === "ONE_TIME" && files.length ? addDaysIso(day, 365) : null,
+      uploadedBy: uploader.id,
+      uploadedByName: uploader.name,
+      uploadedAt: `${day}T${String(9 + Math.floor(evidenceRandom() * 8)).padStart(2, "0")}:${String(Math.floor(evidenceRandom() * 60)).padStart(2, "0")}:00Z`,
+      isActive: true,
+      invalidatedAt: null,
+      invalidatedBy: null,
+      invalidationReason: null,
+      carriedForwardAt: null,
+      carriedForwardFromRunId: null,
+    });
+    air.evidenceCount = 1;
+  }
 
   const now = new Date();
   const thisMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
@@ -114,6 +205,7 @@ export function generateDemoRuns({ vendorUnitAssignments, vendorChecklistAssignm
         ...audit,
       };
       airs.push(air);
+      addEvidence(air, vendorId, windows.w1Start, windows.w1End);
       if (state.published && status === "NOT_COMPLIED") {
         findings.push({
           id: `fnd-demo-${air.id}`,
@@ -191,7 +283,7 @@ export function generateDemoRuns({ vendorUnitAssignments, vendorChecklistAssignm
     }
   }
 
-  return { runs, airs, findings };
+  return { runs, airs, findings, evidence };
 }
 
 function addDaysIso(date: string, days: number) {

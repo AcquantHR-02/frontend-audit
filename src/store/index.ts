@@ -28,3 +28,4 @@ export type AppDispatch = AppStore["dispatch"];
 export { baseApi, type TagType } from "./base-api";
 export * from "./slices/session.slice";
 export * from "./tags";
+export { fetchFile, saveBlob } from "./fetch-file";

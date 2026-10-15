@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDownIcon, ChevronUpIcon, DownloadIcon, FileTextIcon, Loader2Icon, LockIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { toast } from "sonner";
+import { FileList } from "@/components/shared/file-preview";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -209,24 +210,7 @@ function AirDrawerBody({
                     {record.validTo && <span>· valid to {formatDate(record.validTo)}</span>}
                   </div>
                   {record.partyRemarks && <p className="text-[13px]">{record.partyRemarks}</p>}
-                  {record.files.length > 0 && (
-                    <ul className="flex flex-wrap gap-1.5">
-                      {record.files.map((file) => (
-                        <li key={file.id}>
-                          <a
-                            href={file.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1 text-xs hover:bg-accent"
-                          >
-                            <FileTextIcon className="size-3.5" aria-hidden />
-                            {file.fileName}
-                            <DownloadIcon className="size-3 text-muted-foreground" aria-hidden />
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <FileList files={record.files} />
                 </li>
               ))}
             </ul>

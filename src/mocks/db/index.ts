@@ -16,7 +16,7 @@ import { generateDemoRuns } from "./demo-runs";
 import * as seed from "./seed";
 
 const STORAGE_KEY = "ams.mock-db";
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 function createSeedDb() {
   const demo = generateDemoRuns(seed);
@@ -34,7 +34,7 @@ function createSeedDb() {
     peChecklistAssignments: structuredClone(seed.peChecklistAssignments),
     auditRuns: demo.runs as AuditRun[],
     airs: demo.airs as AuditItemResult[],
-    evidence: [] as EvidenceRecord[],
+    evidence: demo.evidence as EvidenceRecord[],
     findings: demo.findings as Finding[],
     findingAttachments: [] as FindingAttachment[],
     auditTrail: [] as AuditEvent[],
